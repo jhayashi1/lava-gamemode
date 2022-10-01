@@ -126,6 +126,10 @@ public class GameManager {
         }
     }
 
+    private void setLava(int level) {
+        
+    }
+
     private void doPlayerSetup(Player player) {
         //Set health, hunger, and inventory of player
         Group group = groupMap.get(player.getUniqueId());

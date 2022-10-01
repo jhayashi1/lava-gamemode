@@ -41,14 +41,20 @@ public class lavaCmd extends Commands {
                     spectators.add(name);
                 }
             }
-            
+
             p.sendMessage("Blue: " + blue);
             p.sendMessage("Red: " + red);
             p.sendMessage("Spectators: " + spectators);
             
-        } else if(args[0].equalsIgnoreCase("blue")) {
-            p.sendMessage("Joining team blue");
-            plugin.addToGroup(p.getUniqueId(), Group.BLUE_TEAM);
+        } else if(args[0].equalsIgnoreCase("team")) {
+            p.sendMessage(ChatColor.GREEN + "Joining team " + args[1]);
+            if (args[1].equalsIgnoreCase("blue")) {
+                plugin.addToGroup(p.getUniqueId(), Group.BLUE_TEAM);
+            } else if (args[1].equalsIgnoreCase("red")) {
+                plugin.addToGroup(p.getUniqueId(), Group.RED_TEAM);
+            } else if (args[1].equalsIgnoreCase("spectators")) {
+                plugin.addToGroup(p.getUniqueId(), Group.SPECTATORS);
+            }
         } else {
             p.sendMessage("Invalid command or not enough permissions");
         }

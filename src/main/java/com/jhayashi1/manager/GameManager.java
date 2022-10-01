@@ -43,7 +43,7 @@ public class GameManager {
     public void nextGame(Player p) {
         isStarted = true;
         lavaLevel = -64;
-        timeToRise = 120;
+        timeToRise = 15;
         groupMap = plugin.getGroupMap();
         blueAlive = new ArrayList<UUID>();
         redAlive = new ArrayList<UUID>();
@@ -67,7 +67,8 @@ public class GameManager {
         gameLoop = this.plugin.getServer().getScheduler().runTaskTimer((Plugin) plugin, new Runnable() {
             public void run() {
                 //End the game if everybody on a team is dead
-                if (blueAlive.isEmpty() || redAlive.isEmpty()) {
+                // if (blueAlive.isEmpty() || redAlive.isEmpty()) {
+                if (blueAlive.isEmpty()) {
                     endGame(redAlive.isEmpty() ? 0 : 1);
                     stopGameLoop();
                 }
@@ -75,10 +76,14 @@ public class GameManager {
                 //Otherwise decrement timeToRise by 1 and make the lava rise if it reaches 0
                 timeToRise--;
 
-                if (timeToRise == 0) {
+                if (timeToRise < 0) {
                     lavaLevel++;
                     timeToRise = 30;
+                    //Make lava rise
                 }
+
+                //Update scoreboards
+                plugin.getBoardManager().updateBoards(timeToRise, lavaLevel);
             }
         }, 20 * 5L, 20 * 1L);
 
@@ -96,7 +101,6 @@ public class GameManager {
 
         //Reset scoreboards
         plugin.getBoardManager().clearBoard();
-        plugin.getBoardManager().updateBoards();
 
         //Reset worldborder
         Bukkit.getPlayer(groupMap.entrySet().stream().findAny().get().getKey()).getWorld().getWorldBorder().reset();

@@ -49,6 +49,7 @@ public class Main extends JavaPlugin implements Listener {
         for (Player online : Bukkit.getOnlinePlayers()) {
             groupMap.put(online.getUniqueId(), profileManager.getProfile(online.getName()).getGroup());
         }
+        boardManager.clearBoard();
 
         new lavaCmd(this);
 

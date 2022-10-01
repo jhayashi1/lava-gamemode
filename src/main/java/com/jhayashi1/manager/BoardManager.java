@@ -12,6 +12,7 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
 import com.jhayashi1.Main;
+import com.jhayashi1.config.Utils;
 
 public class BoardManager {
 
@@ -26,7 +27,7 @@ public class BoardManager {
         this.plugin = plugin;
         //Intialize scoreboard
         b = Bukkit.getScoreboardManager().getNewScoreboard();
-        obj = b.registerNewObjective("Servername", Criteria.DUMMY, "Baka");
+        obj = b.registerNewObjective("Servername", Criteria.DUMMY, Utils.color("&l&o&n&cLAVA"));
         obj.setDisplaySlot(DisplaySlot.SIDEBAR);
 
         //Initialize teams
@@ -36,22 +37,20 @@ public class BoardManager {
     }
 
     //Update all online player's scoreboards
-    public void updateBoards() {
+    public void updateBoards(int timeLeft, int lavaLevel) {
         for (Player online : Bukkit.getOnlinePlayers()) {
-            UUID uuid = online.getUniqueId();
-            updateBoard(uuid);
+            updateBoard(online, timeLeft, lavaLevel);
         }
     }
 
     //Update individual player's scoreboard
-    public void updateBoard(UUID uuid) {
-        Player p = Bukkit.getPlayer(uuid);
-
+    public void updateBoard(Player p, int timeLeft, int lavaLevel) {
         for (String string : p.getScoreboard().getEntries()) {
             p.getScoreboard().resetScores(string);
         }
 
-        obj.getScore(ChatColor.BOLD + "Spectators").setScore(1);
+        obj.getScore("Time until lava rises: " + timeLeft + "s").setScore(2);
+        obj.getScore("Lava Y level: " + lavaLevel).setScore(1);
         p.setScoreboard(b);
     }
 

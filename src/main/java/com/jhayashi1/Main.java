@@ -1,5 +1,12 @@
 package com.jhayashi1;
 
+import java.util.logging.Logger;
+
+import org.bukkit.event.Listener;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import com.jhayashi1.commands.lavaCmd;
+
 public class Main extends JavaPlugin implements Listener {
 
     private static Logger logger;
@@ -9,7 +16,7 @@ public class Main extends JavaPlugin implements Listener {
 
         logger = getLogger();
 
-        new cdCmd(this);
+        new lavaCmd(this);
 
         // this.getServer().getPluginManager().registerEvents(new MiscListener(this), this);
         // this.getServer().getPluginManager().registerEvents(new ProjectileListener(this), this);
@@ -25,12 +32,12 @@ public class Main extends JavaPlugin implements Listener {
         // new SnipeSkill(this, "Snipe");
         // new ShotgunSkill(this, "Shotgun");
 
-        log("Plugin fully enabled");
+        // logger("Plugin fully enabled");
     }
 
     @Override
     public void onDisable() {
-        log("Plugin fully disabled");
+        // log("Plugin fully disabled");
     }
 
     public static Logger getPluginLogger() {

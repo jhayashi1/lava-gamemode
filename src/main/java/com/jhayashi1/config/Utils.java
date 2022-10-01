@@ -110,5 +110,17 @@ public class Utils {
 
         return string;
     }
+
+    public static void msgAll(String msg) {
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            online.sendMessage(msg);
+        }
+    }
+
+    public static int getRand(Double num) {
+        if (Math.random() > 0.5D)
+            return (int) (Math.random() * num);
+        return (int) (Math.random() * -num);
+    }
 }
 

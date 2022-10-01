@@ -14,6 +14,10 @@ public class lavaCmd extends Commands {
     public void execute(Player p, String[] args) {
         if (args[0].equalsIgnoreCase("start")) {
             p.sendMessage(ChatColor.GREEN + "Starting game...");
+            plugin.getGameManager().nextGame(p);
+        } else if (args[0].equalsIgnoreCase("board")) {
+            p.sendMessage(ChatColor.GREEN + "Getting updated board...");
+            plugin.getBoardManager().updateBoard(p.getUniqueId());
         } else {
             p.sendMessage("Invalid command or not enough permissions");
         }

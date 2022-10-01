@@ -6,6 +6,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.jhayashi1.commands.lavaCmd;
+import com.jhayashi1.config.Utils;
 
 public class Main extends JavaPlugin implements Listener {
 
@@ -32,12 +33,12 @@ public class Main extends JavaPlugin implements Listener {
         // new SnipeSkill(this, "Snipe");
         // new ShotgunSkill(this, "Shotgun");
 
-        // logger("Plugin fully enabled");
+        Utils.log("Plugin fully enabled");
     }
 
     @Override
     public void onDisable() {
-        // log("Plugin fully disabled");
+        Utils.log("Plugin fully disabled");
     }
 
     public static Logger getPluginLogger() {

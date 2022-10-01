@@ -1,0 +1,7 @@
+name: lava-gamemode
+version: 0.0.1
+author: Jared
+main: com.jhayashi1.Main
+api-version: 1.19
+commands:
+  lava:

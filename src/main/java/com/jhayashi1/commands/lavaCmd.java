@@ -3,6 +3,7 @@ package com.jhayashi1.commands;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import com.jhayashi1.Main;
+import com.jhayashi1.framework.Group;
 
 public class lavaCmd extends Commands {
 
@@ -18,6 +19,9 @@ public class lavaCmd extends Commands {
         } else if (args[0].equalsIgnoreCase("board")) {
             p.sendMessage(ChatColor.GREEN + "Getting updated board...");
             plugin.getBoardManager().updateBoard(p.getUniqueId());
+        } else if(args[0].equalsIgnoreCase("blue")) {
+            p.sendMessage("Joining team blue");
+            plugin.addToGroup(p.getUniqueId(), Group.BLUE_TEAM);
         } else {
             p.sendMessage("Invalid command or not enough permissions");
         }

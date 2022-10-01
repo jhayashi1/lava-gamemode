@@ -37,7 +37,7 @@ public class JoinQuitListener implements Listener {
 
         //Get the player's current group from the profile and add it to the map
         Group playerGroup = plugin.getProfileManager().getProfile(p.getName()).getGroup();
-        plugin.addToGroupMap(uuid, playerGroup);
+        plugin.addToGroup(uuid, playerGroup);
     }
 
     @EventHandler

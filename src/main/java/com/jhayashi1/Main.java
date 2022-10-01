@@ -101,9 +101,10 @@ public class Main extends JavaPlugin implements Listener {
         return groupMap;
     }
 
-    public void addToGroupMap(UUID uuid, Group group) {
+    public void addToGroup(UUID uuid, Group group) {
         //TODO: change player name color
         groupMap.put(uuid, group);
+        profileManager.getProfile(Bukkit.getPlayer(uuid).getName()).setGroup(group);
     }
 
     public void removeFromGroupMap(UUID uuid) {

@@ -1,9 +1,5 @@
 package com.jhayashi1.config;
 
-import java.util.UUID;
-
-import org.bukkit.Bukkit;
-
 import com.jhayashi1.Main;
 import com.jhayashi1.framework.Group;
 

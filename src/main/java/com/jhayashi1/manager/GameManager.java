@@ -31,6 +31,7 @@ public class GameManager implements Listener {
     private static final int WORLD_BORDER_SIZE = 100; 
     private static final int TIME_TO_RISE_FAST = 5;
     private static final int TIME_TO_RISE_SLOW = 10;
+    private static final int STARTING_LAVA_LEVEL = 32;
 
     private Main plugin;
     private Map<UUID, Group> groupMap;
@@ -53,7 +54,7 @@ public class GameManager implements Listener {
 
     public void nextGame(Player p) {
         isStarted = true;
-        lavaLevel = 64;
+        lavaLevel = STARTING_LAVA_LEVEL;
         timeToRise = TIME_TO_RISE_FAST;
         world = p.getWorld();
         groupMap = plugin.getGroupMap();
@@ -68,6 +69,7 @@ public class GameManager implements Listener {
         redX = startX - (WORLD_BORDER_SIZE / 2) + 1;
         redZ = startZ - (WORLD_BORDER_SIZE / 2) + 1;
 
+        //Variables for ease of use
         lowerX = (blueX < redX) ? blueX : redX;
         upperX = (blueX > redX) ? blueX : redX;
         lowerZ = (blueZ < redZ) ? blueZ : redZ;
@@ -88,6 +90,7 @@ public class GameManager implements Listener {
         gameLoop = this.plugin.getServer().getScheduler().runTaskTimer((Plugin) plugin, new Runnable() {
             public void run() {
                 //End the game if everybody on a team is dead
+                //TODO: UNCOMMENT
                 // if (blueAlive.isEmpty() || redAlive.isEmpty()) {
                 if (blueAlive.isEmpty()) {
                     endGame(redAlive.isEmpty() ? 0 : 1);
@@ -102,6 +105,8 @@ public class GameManager implements Listener {
                     //Slow down time to rise when the y level is at 75
                     if (lavaLevel > 90) {
                         timeToRise = TIME_TO_RISE_SLOW;
+                        
+                        //Shoot about 1 fireball for every 5 blocks
                         shootFireballs(WORLD_BORDER_SIZE / 5, lavaLevel);
                     } else {
                         timeToRise = TIME_TO_RISE_FAST;
@@ -130,8 +135,9 @@ public class GameManager implements Listener {
         //Reset scoreboards
         plugin.getBoardManager().clearBoard();
 
-        //Reset worldborder
+        //Reset worldborder and cleanup lava
         Bukkit.getPlayer(groupMap.entrySet().stream().findAny().get().getKey()).getWorld().getWorldBorder().reset();
+        cleanupLava();
 
         //Add clock for team selection
         for (Player online : Bukkit.getOnlinePlayers()) {
@@ -158,8 +164,24 @@ public class GameManager implements Listener {
         for (int i = lowerX; i <= upperX; i++) {
             for (int j = lowerZ; j <= upperZ; j++) {
                 Location loc = new Location(world, i, level, j);
+                //If the block is air, set it to lava
                 if (loc.getBlock().getType().equals(Material.AIR)) { 
                     loc.getBlock().setType(Material.LAVA);
+                }
+            }
+        }
+    }
+
+    //Go through area in worldborder and remove lava
+    private void cleanupLava() {
+        for (int i = lowerX; i <= upperX + 1; i++) {
+            for (int j = STARTING_LAVA_LEVEL; j <= lavaLevel; j++) {
+                for (int k = lowerZ; k <= upperZ + 1; k++) {
+                    Location loc = new Location(world, i, j, k);
+                    //If the block is lava, set it to air
+                    if (loc.getBlock().getType().equals(Material.LAVA)) { 
+                        loc.getBlock().setType(Material.AIR);
+                    }
                 }
             }
         }
@@ -231,42 +253,4 @@ public class GameManager implements Listener {
     private void stopGameLoop() {
         gameLoop.cancel();
     }
-    // public void nextGame(Player p) {
-    //     isStarted = true;
-    //     for (Player online : Bukkit.getOnlinePlayers()) {
-    //         UUID uuid = online.getUniqueId();
-    //         // map.put(uuid, plugin.getProfileManager().getProfile(uuid).getGroup());
-    //     }
-
-    //     this.plugin.getServer().getScheduler().runTaskLater((Plugin) plugin, new Runnable() {
-    //         public void run() {
-    //             msgAll(ChatColor.GOLD + "" + ChatColor.BOLD + "Start");
-    //         }
-    //     }, 0L);
-    //     this.plugin.getServer().getScheduler().runTaskLater((Plugin) plugin, new Runnable() {
-    //         public void run() {
-    //             msgAll(ChatColor.RED + "" + ChatColor.BOLD + "1 Minute Left!");
-    //         }
-    //     }, 1200L);
-    //     this.plugin.getServer().getScheduler().runTaskLater((Plugin) plugin, new Runnable() {
-    //         public void run() {
-    //             msgAll(ChatColor.RED + "" + ChatColor.BOLD + "30 Seconds Left!");
-    //         }
-    //     }, 1800L);
-    //     this.plugin.getServer().getScheduler().runTaskLater((Plugin) plugin, new Runnable() {
-    //         public void run() {
-    //             msgAll(ChatColor.RED + "" + ChatColor.BOLD + "10 Seconds Left!");
-    //         }
-    //     }, 2200L);
-    //     this.plugin.getServer().getScheduler().runTaskLater((Plugin) plugin, new Runnable() {
-    //         public void run() {
-    //             msgAll(ChatColor.RED + "" + ChatColor.BOLD + "5 Seconds Left!");
-    //         }
-    //     }, 2300L);
-    //     this.plugin.getServer().getScheduler().runTaskLater((Plugin) plugin, new Runnable() {
-    //         public void run() {
-    //             endGame(0);
-    //         }
-    //     }, 2400L);
-    // }
 }

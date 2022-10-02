@@ -9,8 +9,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
@@ -20,20 +23,22 @@ import com.jhayashi1.Main;
 import com.jhayashi1.config.Utils;
 import com.jhayashi1.framework.Group;
 
-public class GameManager {
+public class GameManager implements Listener {
 
-    private static final int WORLD_BORDER_SIZE = 150; 
+    private static final int WORLD_BORDER_SIZE = 50; 
 
     private Main plugin;
     private Map<UUID, Group> groupMap;
     private List<UUID> blueAlive, redAlive;
     private boolean isStarted;
     private BukkitTask gameLoop;
+    private World world;
 
     private int lavaLevel;
     private int timeToRise;
-    private int startX;
-    private int startZ;
+    private int startX, startZ;
+    private int blueX, blueZ;
+    private int redX, redZ;
 
     public GameManager(Main plugin) {
         this.plugin = plugin;
@@ -43,7 +48,8 @@ public class GameManager {
     public void nextGame(Player p) {
         isStarted = true;
         lavaLevel = -64;
-        timeToRise = 15;
+        timeToRise = 5;
+        world = p.getWorld();
         groupMap = plugin.getGroupMap();
         blueAlive = new ArrayList<UUID>();
         redAlive = new ArrayList<UUID>();
@@ -51,10 +57,14 @@ public class GameManager {
         //Get random coordinates to start
         startX = getRandomCoordinate();
         startZ = getRandomCoordinate();
+        blueX = startX + (WORLD_BORDER_SIZE / 2) - 1;
+        blueZ = startZ + (WORLD_BORDER_SIZE / 2) - 1;
+        redX = startX - (WORLD_BORDER_SIZE / 2) + 1;
+        redZ = startZ - (WORLD_BORDER_SIZE / 2) + 1;
 
         //Set world border
-        p.getWorld().getWorldBorder().setCenter(startX, startZ);
-        p.getWorld().getWorldBorder().setSize((double) WORLD_BORDER_SIZE);
+        world.getWorldBorder().setCenter(startX, startZ);
+        world.getWorldBorder().setSize((double) WORLD_BORDER_SIZE);
 
         //Do player specific setup
         for (Player online : Bukkit.getOnlinePlayers()) {
@@ -70,7 +80,6 @@ public class GameManager {
                 // if (blueAlive.isEmpty() || redAlive.isEmpty()) {
                 if (blueAlive.isEmpty()) {
                     endGame(redAlive.isEmpty() ? 0 : 1);
-                    stopGameLoop();
                 }
 
                 //Otherwise decrement timeToRise by 1 and make the lava rise if it reaches 0
@@ -78,8 +87,8 @@ public class GameManager {
 
                 if (timeToRise < 0) {
                     lavaLevel++;
-                    timeToRise = 30;
-                    //Make lava rise
+                    timeToRise = 5;
+                    setLava(lavaLevel);
                 }
 
                 //Update scoreboards
@@ -91,6 +100,7 @@ public class GameManager {
 
     public void endGame(int winner) {
         isStarted = false;
+        stopGameLoop();
         if (winner == 0) {
             Utils.msgAll(Utils.color("&a&lTeam &1&lBlue &a&lhas won the round!"));
         } else if (winner == 1) {
@@ -115,7 +125,7 @@ public class GameManager {
     public void onDeath(EntityDeathEvent e) {
         if (e.getEntity() instanceof Player && plugin.getGameManager().isStarted()) {
             Player p = (Player) e.getEntity();
-            Group group = plugin.getGameManager().getGroupByPlayer(p);
+            Group group = plugin.getGroupMap().get(p.getUniqueId());
 
             //Remove them from alive players list
             if (group == Group.BLUE_TEAM) {
@@ -127,7 +137,14 @@ public class GameManager {
     }
 
     private void setLava(int level) {
-        
+        for (int i = blueX; i >= redX; i--) {
+            for (int j = blueZ; i >= redZ; i--) {
+                Block block = world.getBlockAt(i, level, j);
+                if (block.getType().equals(Material.AIR)) {
+                    block.setType(Material.LAVA);
+                }
+            }
+        }
     }
 
     private void doPlayerSetup(Player player) {
@@ -141,11 +158,11 @@ public class GameManager {
         //Teleport player to starting locations and add them to list of alive players
         switch (group) {
             case BLUE_TEAM:
-                player.teleport(player.getWorld().getHighestBlockAt(startX + (WORLD_BORDER_SIZE / 2) - 1, startZ + (WORLD_BORDER_SIZE / 2) - 1).getLocation().add(0, 10, 0));
+                player.teleport(player.getWorld().getHighestBlockAt(blueX, blueZ).getLocation().add(0, 10, 0));
                 blueAlive.add(player.getUniqueId());
                 break;
             case RED_TEAM:
-                player.teleport(player.getWorld().getHighestBlockAt(startX - (WORLD_BORDER_SIZE / 2) + 1, startZ - (WORLD_BORDER_SIZE / 2) + 1).getLocation().add(0, 10, 0));
+                player.teleport(player.getWorld().getHighestBlockAt(redX, redZ).getLocation().add(0, 10, 0));
                 redAlive.add(player.getUniqueId());
                 break;
             case SPECTATORS:
@@ -177,7 +194,6 @@ public class GameManager {
     private void stopGameLoop() {
         gameLoop.cancel();
     }
-
     // public void nextGame(Player p) {
     //     isStarted = true;
     //     for (Player online : Bukkit.getOnlinePlayers()) {

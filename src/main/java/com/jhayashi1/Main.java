@@ -13,6 +13,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import com.jhayashi1.commands.lavaCmd;
 import com.jhayashi1.config.Utils;
 import com.jhayashi1.framework.Group;
+import com.jhayashi1.listeners.DeathListener;
 import com.jhayashi1.listeners.JoinQuitListener;
 import com.jhayashi1.manager.BoardManager;
 import com.jhayashi1.manager.ConfigManager;
@@ -57,7 +58,8 @@ public class Main extends JavaPlugin implements Listener {
         // this.getServer().getPluginManager().registerEvents(new ProjectileListener(this), this);
         this.getServer().getPluginManager().registerEvents(new JoinQuitListener((this)), this);
         // this.getServer().getPluginManager().registerEvents(new InventoryListener(this), this);
-        // this.getServer().getPluginManager().registerEvents(new DeathListener(this), this);
+        this.getServer().getPluginManager().registerEvents(new DeathListener(this), this);
+        this.getServer().getPluginManager().registerEvents(gameManager, this);
         // this.getServer().getPluginManager().registerEvents(new DamageListener(this), this);
         // this.getServer().getPluginManager().registerEvents(new BlockPlaceBreakListener(this), this);
 

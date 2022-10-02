@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -47,7 +48,7 @@ public class GameManager implements Listener {
 
     public void nextGame(Player p) {
         isStarted = true;
-        lavaLevel = -64;
+        lavaLevel = -0;
         timeToRise = 5;
         world = p.getWorld();
         groupMap = plugin.getGroupMap();
@@ -62,14 +63,14 @@ public class GameManager implements Listener {
         redX = startX - (WORLD_BORDER_SIZE / 2) + 1;
         redZ = startZ - (WORLD_BORDER_SIZE / 2) + 1;
 
-        //Set world border
-        world.getWorldBorder().setCenter(startX, startZ);
-        world.getWorldBorder().setSize((double) WORLD_BORDER_SIZE);
-
         //Do player specific setup
         for (Player online : Bukkit.getOnlinePlayers()) {
             doPlayerSetup(online);
         }
+        
+        //Set world border
+        world.getWorldBorder().setCenter(startX, startZ);
+        world.getWorldBorder().setSize((double) WORLD_BORDER_SIZE);
 
         Utils.msgAll(ChatColor.GREEN + "Game starting...");
 
@@ -87,7 +88,11 @@ public class GameManager implements Listener {
 
                 if (timeToRise < 0) {
                     lavaLevel++;
-                    timeToRise = 5;
+                    if (lavaLevel > 75) {
+                        timeToRise = 10;
+                    } else {
+                        timeToRise = 5;
+                    }
                     setLava(lavaLevel);
                 }
 
@@ -137,11 +142,16 @@ public class GameManager implements Listener {
     }
 
     private void setLava(int level) {
-        for (int i = blueX; i >= redX; i--) {
-            for (int j = blueZ; i >= redZ; i--) {
-                Block block = world.getBlockAt(i, level, j);
-                if (block.getType().equals(Material.AIR)) {
-                    block.setType(Material.LAVA);
+        int lowerX = (blueX < redX) ? blueX : redX;
+        int upperX = (blueX > redX) ? blueX : redX;
+        int lowerZ = (blueZ < redZ) ? blueZ : redZ;
+        int upperZ = (blueZ > redZ) ? blueZ : redZ;
+
+        for (int i = lowerX; i <= upperX; i++) {
+            for (int j = lowerZ; j <= upperZ; j++) {
+                Location loc = new Location(world, i, level, j);
+                if (loc.getBlock().getType().equals(Material.AIR)) { 
+                    loc.getBlock().setType(Material.LAVA);
                 }
             }
         }
@@ -153,7 +163,7 @@ public class GameManager implements Listener {
         player.setHealth(20.0D);
         player.setFoodLevel(20);
         player.setSaturation(500);
-        player.setGameMode(GameMode.CREATIVE);
+        player.setGameMode(GameMode.SURVIVAL);
         player.getInventory().clear();
         //Teleport player to starting locations and add them to list of alive players
         switch (group) {

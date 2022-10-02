@@ -23,6 +23,9 @@ public class lavaCmd extends Commands {
         if (args[0].equalsIgnoreCase("start")) {
             p.sendMessage(ChatColor.GREEN + "Starting game...");
             plugin.getGameManager().nextGame(p);
+        } else if (args[0].equalsIgnoreCase("stop")) { 
+            p.sendMessage(ChatColor.GREEN + "Stopping game...");
+            plugin.getGameManager().endGame(0);
         } else if (args[0].equalsIgnoreCase("teams")) {
             Map<UUID, Group> map = plugin.getGroupMap();
             List<String> blue = new ArrayList<String>();

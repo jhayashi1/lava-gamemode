@@ -6,6 +6,7 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -68,6 +69,10 @@ public class Main extends JavaPlugin implements Listener {
         // new SmokeBombSkill(this, "Smoke Bomb");
         // new SnipeSkill(this, "Snipe");
         // new ShotgunSkill(this, "Shotgun");
+
+        for (World w : Bukkit.getWorlds()) {
+            w.getWorldBorder().reset();
+        }
 
         Utils.log("Plugin fully enabled");
     }

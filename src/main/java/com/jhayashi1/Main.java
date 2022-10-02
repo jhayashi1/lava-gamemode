@@ -15,11 +15,15 @@ import com.jhayashi1.commands.lavaCmd;
 import com.jhayashi1.config.Utils;
 import com.jhayashi1.framework.Group;
 import com.jhayashi1.listeners.DeathListener;
+import com.jhayashi1.listeners.InventoryListener;
 import com.jhayashi1.listeners.JoinQuitListener;
+import com.jhayashi1.listeners.MiscListener;
 import com.jhayashi1.manager.BoardManager;
 import com.jhayashi1.manager.ConfigManager;
 import com.jhayashi1.manager.GameManager;
 import com.jhayashi1.manager.ProfileManager;
+
+import net.md_5.bungee.api.ChatColor;
 
 public class Main extends JavaPlugin implements Listener {
 
@@ -55,10 +59,10 @@ public class Main extends JavaPlugin implements Listener {
 
         new lavaCmd(this);
 
-        // this.getServer().getPluginManager().registerEvents(new MiscListener(this), this);
+        this.getServer().getPluginManager().registerEvents(new MiscListener(this), this);
         // this.getServer().getPluginManager().registerEvents(new ProjectileListener(this), this);
         this.getServer().getPluginManager().registerEvents(new JoinQuitListener((this)), this);
-        // this.getServer().getPluginManager().registerEvents(new InventoryListener(this), this);
+        this.getServer().getPluginManager().registerEvents(new InventoryListener(this), this);
         this.getServer().getPluginManager().registerEvents(new DeathListener(this), this);
         this.getServer().getPluginManager().registerEvents(gameManager, this);
         // this.getServer().getPluginManager().registerEvents(new DamageListener(this), this);
@@ -110,7 +114,10 @@ public class Main extends JavaPlugin implements Listener {
     }
 
     public void addToGroup(UUID uuid, Group group) {
-        //TODO: change player name color
+        //Set player name color
+        Player p = Bukkit.getPlayer(uuid);
+        p.setPlayerListName(group.getChatColor() + p.getName());
+
         groupMap.put(uuid, group);
         profileManager.getProfile(Bukkit.getPlayer(uuid).getName()).setGroup(group);
     }

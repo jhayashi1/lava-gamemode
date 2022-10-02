@@ -11,7 +11,8 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.Block;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Fireball;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -19,6 +20,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.Vector;
 
 import com.jhayashi1.Main;
 import com.jhayashi1.config.Utils;
@@ -26,7 +28,9 @@ import com.jhayashi1.framework.Group;
 
 public class GameManager implements Listener {
 
-    private static final int WORLD_BORDER_SIZE = 50; 
+    private static final int WORLD_BORDER_SIZE = 100; 
+    private static final int TIME_TO_RISE_FAST = 5;
+    private static final int TIME_TO_RISE_SLOW = 10;
 
     private Main plugin;
     private Map<UUID, Group> groupMap;
@@ -40,6 +44,7 @@ public class GameManager implements Listener {
     private int startX, startZ;
     private int blueX, blueZ;
     private int redX, redZ;
+    private int lowerX, upperX, lowerZ, upperZ;
 
     public GameManager(Main plugin) {
         this.plugin = plugin;
@@ -48,8 +53,8 @@ public class GameManager implements Listener {
 
     public void nextGame(Player p) {
         isStarted = true;
-        lavaLevel = -0;
-        timeToRise = 5;
+        lavaLevel = 64;
+        timeToRise = TIME_TO_RISE_FAST;
         world = p.getWorld();
         groupMap = plugin.getGroupMap();
         blueAlive = new ArrayList<UUID>();
@@ -63,11 +68,16 @@ public class GameManager implements Listener {
         redX = startX - (WORLD_BORDER_SIZE / 2) + 1;
         redZ = startZ - (WORLD_BORDER_SIZE / 2) + 1;
 
+        lowerX = (blueX < redX) ? blueX : redX;
+        upperX = (blueX > redX) ? blueX : redX;
+        lowerZ = (blueZ < redZ) ? blueZ : redZ;
+        upperZ = (blueZ > redZ) ? blueZ : redZ;
+
         //Do player specific setup
         for (Player online : Bukkit.getOnlinePlayers()) {
             doPlayerSetup(online);
         }
-        
+
         //Set world border
         world.getWorldBorder().setCenter(startX, startZ);
         world.getWorldBorder().setSize((double) WORLD_BORDER_SIZE);
@@ -86,12 +96,15 @@ public class GameManager implements Listener {
                 //Otherwise decrement timeToRise by 1 and make the lava rise if it reaches 0
                 timeToRise--;
 
+                //If time is 0, make lava level rise
                 if (timeToRise < 0) {
                     lavaLevel++;
-                    if (lavaLevel > 75) {
-                        timeToRise = 10;
+                    //Slow down time to rise when the y level is at 75
+                    if (lavaLevel > 90) {
+                        timeToRise = TIME_TO_RISE_SLOW;
+                        shootFireballs(WORLD_BORDER_SIZE / 5, lavaLevel);
                     } else {
-                        timeToRise = 5;
+                        timeToRise = TIME_TO_RISE_FAST;
                     }
                     setLava(lavaLevel);
                 }
@@ -142,11 +155,6 @@ public class GameManager implements Listener {
     }
 
     private void setLava(int level) {
-        int lowerX = (blueX < redX) ? blueX : redX;
-        int upperX = (blueX > redX) ? blueX : redX;
-        int lowerZ = (blueZ < redZ) ? blueZ : redZ;
-        int upperZ = (blueZ > redZ) ? blueZ : redZ;
-
         for (int i = lowerX; i <= upperX; i++) {
             for (int j = lowerZ; j <= upperZ; j++) {
                 Location loc = new Location(world, i, level, j);
@@ -157,13 +165,32 @@ public class GameManager implements Listener {
         }
     }
 
+    private void shootFireballs(int amount, int level) {
+        int x, z;
+
+        //Get random coordinates to shoot fireballs from
+        for (int i = 0; i < amount; i++) {
+            //Get location
+            x = lowerX + (int) (Math.random() * ((upperX - lowerX) + 1));
+            z = lowerZ + (int) (Math.random() * ((upperZ - lowerZ) + 1));
+            Location loc = new Location(world, x, level, z);
+
+            //Spawn fireball and set velocity
+            Fireball fireball = (Fireball) world.spawnEntity(loc, EntityType.FIREBALL);
+            fireball.setDirection(new Vector(0, 1, 0));
+            fireball.setVelocity(new Vector(0, 1, 0));
+            fireball.setIsIncendiary(true);
+            fireball.setYield(5F);
+        }
+    }
+
     private void doPlayerSetup(Player player) {
         //Set health, hunger, and inventory of player
         Group group = groupMap.get(player.getUniqueId());
         player.setHealth(20.0D);
         player.setFoodLevel(20);
         player.setSaturation(500);
-        player.setGameMode(GameMode.SURVIVAL);
+        player.setGameMode(GameMode.CREATIVE);
         player.getInventory().clear();
         //Teleport player to starting locations and add them to list of alive players
         switch (group) {

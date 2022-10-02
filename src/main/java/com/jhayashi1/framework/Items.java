@@ -16,4 +16,7 @@ public class Items {
 
     public static final ItemStack SPECTATOR = Utils.createItem(Material.WHITE_BANNER, 1, false, false,
     "Spectators", "");
+
+    public static final ItemStack FILLER_GLASS = Utils.createItem(Material.BLACK_STAINED_GLASS_PANE, 1, false,
+    false, " ", " ");
 }

@@ -8,17 +8,19 @@ import net.md_5.bungee.api.ChatColor;
 
 public enum Group {
 
-    BLUE_TEAM(ChatColor.BLUE + "Blue Team", Items.BLUE_TEAM),
-    RED_TEAM(ChatColor.RED + "Red Team", Items.RED_TEAM),
-    SPECTATORS("Spectators", Items.SPECTATOR);
+    BLUE_TEAM(ChatColor.BLUE + "" + ChatColor.BOLD + "Blue Team", Items.BLUE_TEAM, ChatColor.BLUE),
+    RED_TEAM(ChatColor.RED + "" + ChatColor.BOLD + "Red Team", Items.RED_TEAM, ChatColor.RED),
+    SPECTATORS(ChatColor.WHITE + "" + ChatColor.BOLD + "Spectators", Items.SPECTATOR, ChatColor.WHITE);
 
     private String name, rawName;
     private ItemStack icon;
+    private ChatColor color;
 
-    Group (String name, ItemStack icon) {
+    Group (String name, ItemStack icon, ChatColor color) {
         this.name = name;
         rawName = Utils.decolor(name);
         this.icon = icon;
+        this.color = color;
     }
 
     public static Group getGroupByName(String name) {
@@ -40,5 +42,9 @@ public enum Group {
 
     public ItemStack getIcon() {
         return icon;
+    }
+
+    public ChatColor getChatColor() {
+        return color;
     }
 }

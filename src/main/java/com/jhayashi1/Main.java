@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -14,6 +15,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import com.jhayashi1.commands.LavaCommands;
 import com.jhayashi1.config.Utils;
 import com.jhayashi1.framework.Group;
+import com.jhayashi1.listeners.DamageListener;
 import com.jhayashi1.listeners.DeathListener;
 import com.jhayashi1.listeners.InventoryListener;
 import com.jhayashi1.listeners.JoinQuitListener;
@@ -61,7 +63,7 @@ public class Main extends JavaPlugin implements Listener {
         // new lavaCmd(this);
         handler = BukkitCommandHandler.create(this);
         handler.register(new LavaCommands(this));
-        // handler.register(Orphans.path("lava").handler(new LavaCommands()));
+        handler.getAutoCompleter().registerParameterSuggestions(Integer.class, (args, sender, command) -> LavaCommands.autocomplete);
 
         this.getServer().getPluginManager().registerEvents(new MiscListener(this), this);
         // this.getServer().getPluginManager().registerEvents(new ProjectileListener(this), this);
@@ -69,14 +71,8 @@ public class Main extends JavaPlugin implements Listener {
         this.getServer().getPluginManager().registerEvents(new InventoryListener(this), this);
         this.getServer().getPluginManager().registerEvents(new DeathListener(this), this);
         this.getServer().getPluginManager().registerEvents(gameManager, this);
-        // this.getServer().getPluginManager().registerEvents(new DamageListener(this), this);
+        this.getServer().getPluginManager().registerEvents(new DamageListener(this), this);
         // this.getServer().getPluginManager().registerEvents(new BlockPlaceBreakListener(this), this);
-
-        // new BlackHoleSkill(this, "Black Hole");
-        // new ExplosionWandSkill(this, "Explosion wand");
-        // new SmokeBombSkill(this, "Smoke Bomb");
-        // new SnipeSkill(this, "Snipe");
-        // new ShotgunSkill(this, "Shotgun");
 
         for (World w : Bukkit.getWorlds()) {
             w.getWorldBorder().reset();

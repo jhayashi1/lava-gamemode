@@ -37,20 +37,28 @@ public class BoardManager {
     }
 
     //Update all online player's scoreboards
-    public void updateBoards(int timeLeft, int lavaLevel) {
+    public void updateBoards() {
         for (Player online : Bukkit.getOnlinePlayers()) {
-            updateBoard(online, timeLeft, lavaLevel);
+            updateBoard(online);
         }
     }
 
     //Update individual player's scoreboard
-    public void updateBoard(Player p, int timeLeft, int lavaLevel) {
+    public void updateBoard(Player p) {
+        int lavaLevel = plugin.getGameManager().getLavaLevel();
+        int timeLeft = plugin.getGameManager().getTimeLeft();
+        int slowLevel = plugin.getGameManager().getSlowLevel();
+
         for (String string : p.getScoreboard().getEntries()) {
             p.getScoreboard().resetScores(string);
         }
 
+        if (lavaLevel < slowLevel) {
+            obj.getScore("PVP starts at: Y=" + slowLevel).setScore(3);
+        }
+
         obj.getScore("Time until lava rises: " + timeLeft + "s").setScore(2);
-        obj.getScore("Lava Y level: " + lavaLevel).setScore(1);
+        obj.getScore("Lava at: Y=" + lavaLevel).setScore(1);
         p.setScoreboard(b);
     }
 

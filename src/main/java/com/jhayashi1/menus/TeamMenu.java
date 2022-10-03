@@ -6,7 +6,6 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import com.jhayashi1.Main;
 import com.jhayashi1.framework.Group;
 import com.jhayashi1.framework.Items;
-import com.jhayashi1.framework.Profile;
 
 import net.md_5.bungee.api.ChatColor;
 

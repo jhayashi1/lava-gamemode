@@ -32,18 +32,18 @@ public class GameManager implements Listener {
     public static final int DEFAULT_TIME_TO_RISE_FAST = 5;
     public static final int DEFAULT_TIME_TO_RISE_SLOW = 10;
     public static final int DEFAULT_STARTING_LAVA_LEVEL = 32;
-    public static final int DEFAULT_FAST_LEVEL = 75;
+    public static final int DEFAULT_SLOW_LEVEL = 75;
     public static final int FIREBALL_DENOMINATOR = 5;
 
     private Main plugin;
     private Map<UUID, Group> groupMap;
     private List<UUID> blueAlive, redAlive;
-    private boolean isStarted, debug;
-    private BukkitTask gameLoop;
+    private boolean isStarted, debug, fireballsEnabled;
+    private BukkitTask gameLoop, fireballLoop;
     private World world;
 
     private int lavaLevel, lavaStart, timeToRise, numFireballs;
-    private int slowInterval, fastInterval, fastLevel;
+    private int slowInterval, fastInterval, slowLevel;
     private int worldBorderSize;
     private int startX, startZ;
     private int blueX, blueZ;
@@ -64,7 +64,7 @@ public class GameManager implements Listener {
         int slowInterval,
         int fastInterval,
         int numFireballs,
-        int fastLevel
+        int slowLevel
     ) {
         this.debug = debug;
         this.worldBorderSize = worldBorderSize;
@@ -72,11 +72,12 @@ public class GameManager implements Listener {
         this.slowInterval = slowInterval;
         this.fastInterval = fastInterval;
         this.numFireballs = numFireballs;
-        this.fastLevel = fastLevel;
+        this.slowLevel = slowLevel;
 
         isStarted = true;
         timeToRise = fastInterval;
         lavaLevel = lavaStart;
+        fireballsEnabled = false;
         world = p.getWorld();
         groupMap = plugin.getGroupMap();
         blueAlive = new ArrayList<UUID>();
@@ -127,9 +128,14 @@ public class GameManager implements Listener {
                 if (timeToRise < 0) {
                     lavaLevel++;
                     //Slow down time to rise and shoot fireballs when the y level is past a certain point
-                    if (lavaLevel > fastLevel) {
+                    if (lavaLevel > slowLevel) {
                         timeToRise = slowInterval;
-                        shootFireballs(numFireballs, lavaLevel);
+
+                        if (!fireballsEnabled) {
+                            fireballLoop = startFireballs();
+                        }
+
+                        fireballsEnabled = true;
                     } else {
                         timeToRise = fastInterval;
                     }
@@ -137,7 +143,7 @@ public class GameManager implements Listener {
                 }
 
                 //Update scoreboards
-                plugin.getBoardManager().updateBoards(timeToRise, lavaLevel);
+                plugin.getBoardManager().updateBoards();
             }
         }, 20 * 5L, 20 * 1L);
     }
@@ -214,6 +220,23 @@ public class GameManager implements Listener {
         }
     }
 
+    //Run every 1/2 second
+    private BukkitTask startFireballs() {
+        return this.plugin.getServer().getScheduler().runTaskTimer((Plugin) plugin, new Runnable() {
+
+            @Override
+            public void run() {
+                //Random number between 1 and 10
+                int randNum = (int) (Math.random() * 10) + 1;
+
+                //Basically 10% chance to shoot fireballs
+                if (randNum > 9) {
+                    shootFireballs(numFireballs, lavaLevel);
+                }
+            } 
+        }, 0, 10L);
+    }
+
     private void shootFireballs(int amount, int level) {
         int x, z;
 
@@ -239,7 +262,7 @@ public class GameManager implements Listener {
         player.setHealth(20.0D);
         player.setFoodLevel(20);
         player.setSaturation(500);
-        player.setGameMode(GameMode.CREATIVE);
+        player.setGameMode(debug ? GameMode.CREATIVE : GameMode.SURVIVAL);
         player.getInventory().clear();
         //Teleport player to starting locations and add them to list of alive players
         switch (group) {
@@ -279,5 +302,18 @@ public class GameManager implements Listener {
 
     private void stopGameLoop() {
         gameLoop.cancel();
+        fireballLoop.cancel();
+    }
+
+    public int getLavaLevel() {
+        return lavaLevel;
+    }
+
+    public int getSlowLevel() {
+        return slowLevel;
+    }
+
+    public int getTimeLeft() {
+        return timeToRise;
     }
 }

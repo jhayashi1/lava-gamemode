@@ -223,16 +223,14 @@ public class GameManager implements Listener {
         }
     }
 
-    //Run every 1/2 second
     private BukkitTask startFireballs() {
         return this.plugin.getServer().getScheduler().runTaskTimer((Plugin) plugin, new Runnable() {
 
             @Override
             public void run() {
-                //Random number between 1 and 10
+                //Random number between 1 and 100
                 int randNum = (int) (Math.random() * 100) + 1;
 
-                //Basically 10% chance to shoot fireballs
                 if (randNum < fireballChance) {
                     shootFireballs(numFireballs, lavaLevel);
                 }

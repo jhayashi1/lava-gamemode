@@ -52,10 +52,10 @@ public class LavaCommands {
         @Switch("here") boolean here,
         @Optional @Flag("size") Integer worldBorderSize,
         @Optional @Flag("level") Integer lavaStart,
+        @Optional @Flag("slowlevel") Integer slowLevel
         @Optional @Flag("slow") Integer slowInterval,
         @Optional @Flag("fast") Integer fastInterval,
         @Optional @Flag("fireballs") Integer numFireballs,
-        @Optional @Flag("slowlevel") Integer slowLevel
     ) { 
         //If the game isn't started, start the game
         //TODO: Average block height for default level

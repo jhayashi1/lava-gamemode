@@ -34,6 +34,7 @@ public class GameManager implements Listener {
     public static final int DEFAULT_STARTING_LAVA_LEVEL = 32;
     public static final int DEFAULT_SLOW_LEVEL = 75;
     public static final int FIREBALL_DENOMINATOR = 5;
+    public static final int DEFAULT_FIREBALL_CHANCE = 5;
 
     private Main plugin;
     private Map<UUID, Group> groupMap;
@@ -43,7 +44,7 @@ public class GameManager implements Listener {
     private World world;
 
     private int lavaLevel, lavaStart, timeToRise, numFireballs;
-    private int slowInterval, fastInterval, slowLevel;
+    private int slowInterval, fastInterval, slowLevel, fireballChance;
     private int worldBorderSize;
     private int startX, startZ;
     private int blueX, blueZ;
@@ -64,7 +65,8 @@ public class GameManager implements Listener {
         int slowInterval,
         int fastInterval,
         int numFireballs,
-        int slowLevel
+        int slowLevel,
+        int fireballChance
     ) {
         this.debug = debug;
         this.worldBorderSize = worldBorderSize;
@@ -73,6 +75,7 @@ public class GameManager implements Listener {
         this.fastInterval = fastInterval;
         this.numFireballs = numFireballs;
         this.slowLevel = slowLevel;
+        this.fireballChance = fireballChance;
 
         isStarted = true;
         timeToRise = fastInterval;
@@ -227,14 +230,14 @@ public class GameManager implements Listener {
             @Override
             public void run() {
                 //Random number between 1 and 10
-                int randNum = (int) (Math.random() * 10) + 1;
+                int randNum = (int) (Math.random() * 100) + 1;
 
                 //Basically 10% chance to shoot fireballs
-                if (randNum > 9) {
+                if (randNum < fireballChance) {
                     shootFireballs(numFireballs, lavaLevel);
                 }
             } 
-        }, 0, 10L);
+        }, 0, 20L);
     }
 
     private void shootFireballs(int amount, int level) {

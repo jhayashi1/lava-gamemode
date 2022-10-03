@@ -28,20 +28,23 @@ import com.jhayashi1.framework.Group;
 
 public class GameManager implements Listener {
 
-    private static final int WORLD_BORDER_SIZE = 100; 
-    private static final int TIME_TO_RISE_FAST = 5;
-    private static final int TIME_TO_RISE_SLOW = 10;
-    private static final int STARTING_LAVA_LEVEL = 32;
+    public static final int DEFAULT_WORLD_BORDER_SIZE = 100; 
+    public static final int DEFAULT_TIME_TO_RISE_FAST = 5;
+    public static final int DEFAULT_TIME_TO_RISE_SLOW = 10;
+    public static final int DEFAULT_STARTING_LAVA_LEVEL = 32;
+    public static final int DEFAULT_FAST_LEVEL = 75;
+    public static final int FIREBALL_DENOMINATOR = 5;
 
     private Main plugin;
     private Map<UUID, Group> groupMap;
     private List<UUID> blueAlive, redAlive;
-    private boolean isStarted;
+    private boolean isStarted, debug;
     private BukkitTask gameLoop;
     private World world;
 
-    private int lavaLevel;
-    private int timeToRise;
+    private int lavaLevel, lavaStart, timeToRise, numFireballs;
+    private int slowInterval, fastInterval, fastLevel;
+    private int worldBorderSize;
     private int startX, startZ;
     private int blueX, blueZ;
     private int redX, redZ;
@@ -52,22 +55,40 @@ public class GameManager implements Listener {
         isStarted = false;
     }
 
-    public void nextGame(Player p) {
+    public void initializeGame(
+        Player p,
+        boolean debug, 
+        boolean usePlayerPosition, 
+        int worldBorderSize,
+        int lavaStart,
+        int slowInterval,
+        int fastInterval,
+        int numFireballs,
+        int fastLevel
+    ) {
+        this.debug = debug;
+        this.worldBorderSize = worldBorderSize;
+        this.lavaStart = lavaStart;
+        this.slowInterval = slowInterval;
+        this.fastInterval = fastInterval;
+        this.numFireballs = numFireballs;
+        this.fastLevel = fastLevel;
+
         isStarted = true;
-        lavaLevel = STARTING_LAVA_LEVEL;
-        timeToRise = TIME_TO_RISE_FAST;
+        timeToRise = fastInterval;
+        lavaLevel = lavaStart;
         world = p.getWorld();
         groupMap = plugin.getGroupMap();
         blueAlive = new ArrayList<UUID>();
         redAlive = new ArrayList<UUID>();
 
-        //Get random coordinates to start
-        startX = getRandomCoordinate();
-        startZ = getRandomCoordinate();
-        blueX = startX + (WORLD_BORDER_SIZE / 2) - 1;
-        blueZ = startZ + (WORLD_BORDER_SIZE / 2) - 1;
-        redX = startX - (WORLD_BORDER_SIZE / 2) + 1;
-        redZ = startZ - (WORLD_BORDER_SIZE / 2) + 1;
+        //Get starting coordinates - random if player position isn't used
+        startX = usePlayerPosition ? (int) p.getLocation().getX() : getRandomCoordinate();
+        startZ = usePlayerPosition ? (int) p.getLocation().getZ() : getRandomCoordinate();
+        blueX = startX + (worldBorderSize / 2) - 1;
+        blueZ = startZ + (worldBorderSize / 2) - 1;
+        redX = startX - (worldBorderSize / 2) + 1;
+        redZ = startZ - (worldBorderSize / 2) + 1;
 
         //Variables for ease of use
         lowerX = (blueX < redX) ? blueX : redX;
@@ -75,6 +96,10 @@ public class GameManager implements Listener {
         lowerZ = (blueZ < redZ) ? blueZ : redZ;
         upperZ = (blueZ > redZ) ? blueZ : redZ;
 
+        nextGame();
+    }
+
+    public void nextGame() {
         //Do player specific setup
         for (Player online : Bukkit.getOnlinePlayers()) {
             doPlayerSetup(online);
@@ -82,17 +107,16 @@ public class GameManager implements Listener {
 
         //Set world border
         world.getWorldBorder().setCenter(startX, startZ);
-        world.getWorldBorder().setSize((double) WORLD_BORDER_SIZE);
+        world.getWorldBorder().setSize((double) worldBorderSize);
 
+        //Tell players that the game is starting
         Utils.msgAll(ChatColor.GREEN + "Game starting...");
 
         //Main game loop that runs every second
         gameLoop = this.plugin.getServer().getScheduler().runTaskTimer((Plugin) plugin, new Runnable() {
             public void run() {
-                //End the game if everybody on a team is dead
-                //TODO: UNCOMMENT
-                // if (blueAlive.isEmpty() || redAlive.isEmpty()) {
-                if (blueAlive.isEmpty()) {
+                //End the game if everybody on a team is dead and it isn't in debug mode
+                if ((blueAlive.isEmpty() || redAlive.isEmpty()) && !debug) {
                     endGame(redAlive.isEmpty() ? 0 : 1);
                 }
 
@@ -102,14 +126,12 @@ public class GameManager implements Listener {
                 //If time is 0, make lava level rise
                 if (timeToRise < 0) {
                     lavaLevel++;
-                    //Slow down time to rise when the y level is at 75
-                    if (lavaLevel > 90) {
-                        timeToRise = TIME_TO_RISE_SLOW;
-                        
-                        //Shoot about 1 fireball for every 5 blocks
-                        shootFireballs(WORLD_BORDER_SIZE / 5, lavaLevel);
+                    //Slow down time to rise and shoot fireballs when the y level is past a certain point
+                    if (lavaLevel > fastLevel) {
+                        timeToRise = slowInterval;
+                        shootFireballs(numFireballs, lavaLevel);
                     } else {
-                        timeToRise = TIME_TO_RISE_FAST;
+                        timeToRise = fastInterval;
                     }
                     setLava(lavaLevel);
                 }
@@ -118,19 +140,23 @@ public class GameManager implements Listener {
                 plugin.getBoardManager().updateBoards(timeToRise, lavaLevel);
             }
         }, 20 * 5L, 20 * 1L);
-
     }
 
     public void endGame(int winner) {
         isStarted = false;
         stopGameLoop();
+
+        //Message all players the game has ended
+        String announcement = "";
         if (winner == 0) {
-            Utils.msgAll(Utils.color("&a&lTeam &1&lBlue &a&lhas won the round!"));
+            announcement = Group.BLUE_TEAM.getName() + ChatColor.GREEN + "has won the round!";
         } else if (winner == 1) {
-            Utils.msgAll(ChatColor.GOLD + "" + ChatColor.BOLD + "Team Red has won the round!");
+            announcement = Group.RED_TEAM.getName() + ChatColor.GREEN + "has won the round!";
         } else {
-            Utils.msgAll(ChatColor.GOLD + "" + ChatColor.BOLD + "Resetting game");
+            announcement = ChatColor.GREEN + "" + ChatColor.BOLD + "Resetting game";
         }
+
+        Utils.msgAll(announcement);
 
         //Reset scoreboards
         plugin.getBoardManager().clearBoard();
@@ -160,6 +186,7 @@ public class GameManager implements Listener {
         }
     }
 
+    //Go through area in worldborder and add lava at the current y level
     private void setLava(int level) {
         for (int i = lowerX; i <= upperX; i++) {
             for (int j = lowerZ; j <= upperZ; j++) {
@@ -175,7 +202,7 @@ public class GameManager implements Listener {
     //Go through area in worldborder and remove lava
     private void cleanupLava() {
         for (int i = lowerX; i <= upperX + 1; i++) {
-            for (int j = STARTING_LAVA_LEVEL; j <= lavaLevel; j++) {
+            for (int j = lavaStart; j <= lavaLevel; j++) {
                 for (int k = lowerZ; k <= upperZ + 1; k++) {
                     Location loc = new Location(world, i, j, k);
                     //If the block is lava, set it to air
@@ -217,16 +244,16 @@ public class GameManager implements Listener {
         //Teleport player to starting locations and add them to list of alive players
         switch (group) {
             case BLUE_TEAM:
-                player.teleport(player.getWorld().getHighestBlockAt(blueX, blueZ).getLocation().add(0, 10, 0));
+                player.teleport(player.getWorld().getHighestBlockAt(blueX, blueZ).getLocation().add(0, 3, 0));
                 blueAlive.add(player.getUniqueId());
                 break;
             case RED_TEAM:
-                player.teleport(player.getWorld().getHighestBlockAt(redX, redZ).getLocation().add(0, 10, 0));
+                player.teleport(player.getWorld().getHighestBlockAt(redX, redZ).getLocation().add(0, 3, 0));
                 redAlive.add(player.getUniqueId());
                 break;
             case SPECTATORS:
                 player.setGameMode(GameMode.SPECTATOR);
-                player.teleport(player.getWorld().getHighestBlockAt(startX, startZ).getLocation().add(0, 10, 0));
+                player.teleport(player.getWorld().getHighestBlockAt(startX, startZ).getLocation().add(0, 3, 0));
                 break;
         }
     }

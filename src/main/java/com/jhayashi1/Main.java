@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.jhayashi1.commands.lavaCmd;
+import com.jhayashi1.commands.LavaCommands;
 import com.jhayashi1.config.Utils;
 import com.jhayashi1.framework.Group;
 import com.jhayashi1.listeners.DeathListener;
@@ -23,7 +23,7 @@ import com.jhayashi1.manager.ConfigManager;
 import com.jhayashi1.manager.GameManager;
 import com.jhayashi1.manager.ProfileManager;
 
-import net.md_5.bungee.api.ChatColor;
+import revxrsal.commands.bukkit.BukkitCommandHandler;
 
 public class Main extends JavaPlugin implements Listener {
 
@@ -33,6 +33,7 @@ public class Main extends JavaPlugin implements Listener {
     private GameManager gameManager;
     private ConfigManager configManager;
     private ProfileManager profileManager;
+    private BukkitCommandHandler handler;
 
     private Map<UUID, Group> groupMap;
 
@@ -57,7 +58,10 @@ public class Main extends JavaPlugin implements Listener {
         }
         boardManager.clearBoard();
 
-        new lavaCmd(this);
+        // new lavaCmd(this);
+        handler = BukkitCommandHandler.create(this);
+        handler.register(new LavaCommands(this));
+        // handler.register(Orphans.path("lava").handler(new LavaCommands()));
 
         this.getServer().getPluginManager().registerEvents(new MiscListener(this), this);
         // this.getServer().getPluginManager().registerEvents(new ProjectileListener(this), this);

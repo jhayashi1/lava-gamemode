@@ -26,7 +26,7 @@ public class CustomRecipes {
         ItemStack arrow = new ItemStack(Material.ARROW, 5);
         ShapelessRecipe arrowRecipe = new ShapelessRecipe(key, arrow);
         arrowRecipe.addIngredient(Material.FLINT);
-        arrowRecipe.addIngredient(Material.STRING);
+        arrowRecipe.addIngredient(Material.STICK);
         Bukkit.addRecipe(arrowRecipe);
     }
 

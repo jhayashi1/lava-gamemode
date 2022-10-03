@@ -14,6 +14,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.jhayashi1.commands.LavaCommands;
 import com.jhayashi1.config.Utils;
+import com.jhayashi1.framework.CustomRecipes;
 import com.jhayashi1.framework.Group;
 import com.jhayashi1.listeners.DamageListener;
 import com.jhayashi1.listeners.DeathListener;
@@ -53,6 +54,7 @@ public class Main extends JavaPlugin implements Listener {
         profileManager.loadProfiles();
 
         groupMap = new HashMap<UUID, Group>();
+        new CustomRecipes(this);
 
         //Used to make it not break when reloading
         for (Player online : Bukkit.getOnlinePlayers()) {

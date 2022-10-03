@@ -158,9 +158,9 @@ public class GameManager implements Listener {
         //Message all players the game has ended
         String announcement = "";
         if (winner == 0) {
-            announcement = Group.BLUE_TEAM.getName() + ChatColor.GREEN + "has won the round!";
+            announcement = Group.BLUE_TEAM.getName() + ChatColor.GREEN + " has won the round!";
         } else if (winner == 1) {
-            announcement = Group.RED_TEAM.getName() + ChatColor.GREEN + "has won the round!";
+            announcement = Group.RED_TEAM.getName() + ChatColor.GREEN + " has won the round!";
         } else {
             announcement = ChatColor.GREEN + "" + ChatColor.BOLD + "Resetting game";
         }

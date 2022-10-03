@@ -52,10 +52,11 @@ public class LavaCommands {
         @Switch("here") boolean here,
         @Optional @Flag("size") Integer worldBorderSize,
         @Optional @Flag("level") Integer lavaStart,
-        @Optional @Flag("slowlevel") Integer slowLevel
+        @Optional @Flag("slowlevel") Integer slowLevel,
         @Optional @Flag("slow") Integer slowInterval,
         @Optional @Flag("fast") Integer fastInterval,
         @Optional @Flag("fireballs") Integer numFireballs,
+        @Optional @Flag("fireballChance") Integer chance
     ) { 
         //If the game isn't started, start the game
         //TODO: Average block height for default level
@@ -70,7 +71,8 @@ public class LavaCommands {
                 slowInterval != null ? slowInterval.intValue() : GameManager.DEFAULT_TIME_TO_RISE_SLOW,
                 fastInterval != null ? fastInterval.intValue() : GameManager.DEFAULT_TIME_TO_RISE_FAST,
                 numFireballs != null ? numFireballs.intValue() : wbs / GameManager.FIREBALL_DENOMINATOR,
-                slowLevel != null ? slowLevel.intValue() : GameManager.DEFAULT_SLOW_LEVEL
+                slowLevel != null ? slowLevel.intValue() : GameManager.DEFAULT_SLOW_LEVEL,
+                chance != null ? chance.intValue() : GameManager.DEFAULT_FIREBALL_CHANCE
             );
         } else {
             sender.sendMessage(ChatColor.RED + "Game already started!");

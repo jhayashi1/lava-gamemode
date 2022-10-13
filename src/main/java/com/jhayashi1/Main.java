@@ -13,6 +13,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.jhayashi1.commands.LavaCommands;
+import com.jhayashi1.config.GameConfig;
 import com.jhayashi1.config.Utils;
 import com.jhayashi1.framework.CustomRecipes;
 import com.jhayashi1.framework.Group;
@@ -64,17 +65,15 @@ public class Main extends JavaPlugin implements Listener {
 
         // new lavaCmd(this);
         handler = BukkitCommandHandler.create(this);
+        handler.getAutoCompleter().registerParameterSuggestions(GameConfig.class, (args, sender, command) -> gameManager.getConfigMap().keySet());
         handler.register(new LavaCommands(this));
-        handler.getAutoCompleter().registerParameterSuggestions(Integer.class, (args, sender, command) -> LavaCommands.autocomplete);
 
         this.getServer().getPluginManager().registerEvents(new MiscListener(this), this);
-        // this.getServer().getPluginManager().registerEvents(new ProjectileListener(this), this);
         this.getServer().getPluginManager().registerEvents(new JoinQuitListener((this)), this);
         this.getServer().getPluginManager().registerEvents(new InventoryListener(this), this);
         this.getServer().getPluginManager().registerEvents(new DeathListener(this), this);
         this.getServer().getPluginManager().registerEvents(gameManager, this);
         this.getServer().getPluginManager().registerEvents(new DamageListener(this), this);
-        // this.getServer().getPluginManager().registerEvents(new BlockPlaceBreakListener(this), this);
 
         for (World w : Bukkit.getWorlds()) {
             w.getWorldBorder().reset();

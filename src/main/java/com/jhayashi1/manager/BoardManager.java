@@ -47,14 +47,14 @@ public class BoardManager {
     public void updateBoard(Player p) {
         int lavaLevel = plugin.getGameManager().getLavaLevel();
         int timeLeft = plugin.getGameManager().getTimeLeft();
-        int slowLevel = plugin.getGameManager().getSlowLevel();
+        int pvpLevel = plugin.getGameManager().getPVPLevel();
 
         for (String string : p.getScoreboard().getEntries()) {
             p.getScoreboard().resetScores(string);
         }
 
-        if (lavaLevel < slowLevel) {
-            obj.getScore("PVP starts at: Y=" + slowLevel).setScore(3);
+        if (lavaLevel < pvpLevel) {
+            obj.getScore("PVP starts at: Y=" + pvpLevel).setScore(3);
         }
 
         obj.getScore("Time until lava rises: " + timeLeft + "s").setScore(2);

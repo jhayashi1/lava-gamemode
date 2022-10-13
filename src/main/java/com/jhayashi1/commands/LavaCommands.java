@@ -2,10 +2,9 @@ package com.jhayashi1.commands;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -13,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import com.jhayashi1.Main;
+import com.jhayashi1.config.GameConfig;
 import com.jhayashi1.config.Utils;
 import com.jhayashi1.framework.Group;
 import com.jhayashi1.manager.GameManager;
@@ -21,14 +21,16 @@ import net.md_5.bungee.api.ChatColor;
 import revxrsal.commands.annotation.AutoComplete;
 import revxrsal.commands.annotation.Command;
 import revxrsal.commands.annotation.Flag;
+import revxrsal.commands.annotation.Named;
 import revxrsal.commands.annotation.Optional;
 import revxrsal.commands.annotation.Subcommand;
 import revxrsal.commands.annotation.Switch;
 
 @Command("lc")
+@AutoComplete("@startCmd *")
 public class LavaCommands {
 
-    public static final Set<String> autocomplete = new HashSet<String>((Arrays.asList(
+    public static final Collection<String> autocomplete = new ArrayList<String>((Arrays.asList(
         "-debug",
         "-here",
         "-size",
@@ -46,36 +48,47 @@ public class LavaCommands {
     }
 
     @Subcommand("start")
-    public void startGame(
-        Player sender,
-        @Switch("debug") boolean debug,
-        @Switch("here") boolean here,
-        @Optional @Flag("size") Integer worldBorderSize,
-        @Optional @Flag("level") Integer lavaStart,
-        @Optional @Flag("slowlevel") Integer slowLevel,
-        @Optional @Flag("slow") Integer slowInterval,
-        @Optional @Flag("fast") Integer fastInterval,
-        @Optional @Flag("fireballs") Integer numFireballs,
-        @Optional @Flag("fireballChance") Integer chance
-    ) { 
+    public void startGame(Player sender) { 
         //If the game isn't started, start the game
         //TODO: Average block height for default level
         if (!plugin.getGameManager().isStarted()) {
-            int wbs = worldBorderSize != null ? worldBorderSize.intValue() : GameManager.DEFAULT_WORLD_BORDER_SIZE;
-            plugin.getGameManager().initializeGame(
-                sender,
-                debug,
-                here,
-                wbs,
-                lavaStart != null ? lavaStart.intValue() : GameManager.DEFAULT_STARTING_LAVA_LEVEL,
-                slowInterval != null ? slowInterval.intValue() : GameManager.DEFAULT_TIME_TO_RISE_SLOW,
-                fastInterval != null ? fastInterval.intValue() : GameManager.DEFAULT_TIME_TO_RISE_FAST,
-                numFireballs != null ? numFireballs.intValue() : wbs / GameManager.FIREBALL_DENOMINATOR,
-                slowLevel != null ? slowLevel.intValue() : GameManager.DEFAULT_SLOW_LEVEL,
-                chance != null ? chance.intValue() : GameManager.DEFAULT_FIREBALL_CHANCE
-            );
+            plugin.getGameManager().initializeGame(sender);
         } else {
             sender.sendMessage(ChatColor.RED + "Game already started!");
+        }
+    }
+
+    @Subcommand("config")
+    public void setConfigVariable(Player sender, GameConfig configOption, String value) {
+        int integerValue = 0;
+
+        //If the input is 'reset' make number default value, otherwise try setting it to an integer value
+        if (value.equalsIgnoreCase("reset")) {
+            integerValue = configOption.getDefaultValue();
+        } else {
+            try {
+                integerValue = Integer.parseInt(value);
+            } catch (Exception e) {
+                sender.sendMessage(ChatColor.RED + "Value inputted is not a number!");
+                return;
+            }
+        }
+
+        //If the integer value is in the acceptable range, set the config option to it
+        if (configOption.checkNumInValueRange(integerValue)) {
+            plugin.getGameManager().setConfigMapOption(configOption.getName(), integerValue);
+            sender.sendMessage(ChatColor.GREEN + "Successfully set " + configOption.getName() + "'s value to " + integerValue);
+        } else {
+            sender.sendMessage(ChatColor.RED + "Value " + integerValue + " not in range " + configOption.getMinValue() + " - " + configOption.getMaxValue());
+        }
+    }
+
+    @Subcommand("GameConfig")
+    public void getGameConfigVariables(Player sender) {
+        Map<String, Integer> configMap = plugin.getGameManager().getConfigMap();
+        
+        for (String key : configMap.keySet()) {
+            sender.sendMessage(key + " = " + configMap.get(key));
         }
     }
 

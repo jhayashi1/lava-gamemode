@@ -1,10 +1,9 @@
 package com.jhayashi1.config;
 
-import java.util.logging.Logger;
-
-import com.jhayashi1.Main;
-
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -15,7 +14,19 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import com.jhayashi1.Main;
+
+import static java.util.Map.entry;
+
 public class Utils {
+    public static final int DEFAULT_WORLD_BORDER_SIZE = 100; 
+    public static final int DEFAULT_TIME_TO_RISE_FAST = 5;
+    public static final int DEFAULT_TIME_TO_RISE_SLOW = 10;
+    public static final int DEFAULT_STARTING_LAVA_LEVEL = 32;
+    public static final int DEFAULT_PVP_LEVEL = 75;
+    public static final int DEFAULT_FIREBALLS = 20;
+    public static final int DEFAULT_FIREBALL_CHANCE = 5;
+
     private static Logger logger = Main.getPluginLogger();
 
     public static String color(String string) {
@@ -121,6 +132,17 @@ public class Utils {
         if (Math.random() > 0.5D)
             return (int) (Math.random() * num);
         return (int) (Math.random() * -num);
+    }
+
+    public static Map<String, Integer> initGameConfigMap() {
+
+        Map<String, Integer> result = new HashMap<String, Integer>();
+
+        for (GameConfig config : GameConfig.values()) {
+            result.put(config.getName(), config.getDefaultValue());
+        }
+
+        return result;
     }
 }
 

@@ -23,10 +23,10 @@ public class DamageListener implements Listener {
         }
         
         int lavaLevel = plugin.getGameManager().getLavaLevel();
-        int slowLevel = plugin.getGameManager().getSlowLevel();
+        int pvpLevel = plugin.getGameManager().getPVPLevel();
         
         //Disable pvp if the lava level hasn't reached the slow level
-        if (lavaLevel < slowLevel) {
+        if (lavaLevel < pvpLevel) {
             e.setCancelled(true);
         }
     }

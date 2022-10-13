@@ -28,23 +28,16 @@ import com.jhayashi1.framework.Group;
 
 public class GameManager implements Listener {
 
-    public static final int DEFAULT_WORLD_BORDER_SIZE = 100; 
-    public static final int DEFAULT_TIME_TO_RISE_FAST = 5;
-    public static final int DEFAULT_TIME_TO_RISE_SLOW = 10;
-    public static final int DEFAULT_STARTING_LAVA_LEVEL = 32;
-    public static final int DEFAULT_SLOW_LEVEL = 75;
-    public static final int FIREBALL_DENOMINATOR = 5;
-    public static final int DEFAULT_FIREBALL_CHANCE = 5;
-
     private Main plugin;
     private Map<UUID, Group> groupMap;
+    private Map<String, Integer> configMap;
     private List<UUID> blueAlive, redAlive;
-    private boolean isStarted, debug, fireballsEnabled;
+    private boolean isStarted, debug, usePlayerPos, fireballsEnabled;
     private BukkitTask gameLoop, fireballLoop;
     private World world;
 
     private int lavaLevel, lavaStart, timeToRise, numFireballs;
-    private int slowInterval, fastInterval, slowLevel, fireballChance;
+    private int slowInterval, fastInterval, pvpLevel, fireballChance;
     private int worldBorderSize;
     private int startX, startZ;
     private int blueX, blueZ;
@@ -54,29 +47,22 @@ public class GameManager implements Listener {
     public GameManager(Main plugin) {
         this.plugin = plugin;
         isStarted = false;
+        configMap = Utils.initGameConfigMap();
     }
 
-    public void initializeGame(
-        Player p,
-        boolean debug, 
-        boolean usePlayerPosition, 
-        int worldBorderSize,
-        int lavaStart,
-        int slowInterval,
-        int fastInterval,
-        int numFireballs,
-        int slowLevel,
-        int fireballChance
-    ) {
-        this.debug = debug;
-        this.worldBorderSize = worldBorderSize;
-        this.lavaStart = lavaStart;
-        this.slowInterval = slowInterval;
-        this.fastInterval = fastInterval;
-        this.numFireballs = numFireballs;
-        this.slowLevel = slowLevel;
-        this.fireballChance = fireballChance;
+    public void initializeGame(Player p) {
+        //Game config options
+        debug = (configMap.get("Debug") == 1); 
+        usePlayerPos = (configMap.get("Here") == 1); 
+        worldBorderSize = configMap.get("Border");
+        lavaStart = configMap.get("LavaStartLevel");
+        slowInterval = configMap.get("PVPLevel");
+        fastInterval = configMap.get("SlowRiseTime");
+        numFireballs = configMap.get("FastRiseTime");
+        pvpLevel = configMap.get("Fireballs");
+        fireballChance = configMap.get("FireballChance");
 
+        //Miscellaneous initialization
         isStarted = true;
         timeToRise = fastInterval;
         lavaLevel = lavaStart;
@@ -87,8 +73,8 @@ public class GameManager implements Listener {
         redAlive = new ArrayList<UUID>();
 
         //Get starting coordinates - random if player position isn't used
-        startX = usePlayerPosition ? (int) p.getLocation().getX() : getRandomCoordinate();
-        startZ = usePlayerPosition ? (int) p.getLocation().getZ() : getRandomCoordinate();
+        startX = usePlayerPos ? (int) p.getLocation().getX() : getRandomCoordinate();
+        startZ = usePlayerPos ? (int) p.getLocation().getZ() : getRandomCoordinate();
         blueX = startX + (worldBorderSize / 2) - 1;
         blueZ = startZ + (worldBorderSize / 2) - 1;
         redX = startX - (worldBorderSize / 2) + 1;
@@ -131,17 +117,20 @@ public class GameManager implements Listener {
                 if (timeToRise < 0) {
                     lavaLevel++;
                     //Slow down time to rise and shoot fireballs when the y level is past a certain point
-                    if (lavaLevel > slowLevel) {
+                    if (lavaLevel > pvpLevel) {
                         timeToRise = slowInterval;
 
+                        //If fireballs aren't already enabled, start a new task to spawn them
                         if (!fireballsEnabled) {
                             fireballLoop = startFireballs();
                         }
 
                         fireballsEnabled = true;
                     } else {
+                        //If pvp isn't enabled, lava rises faster
                         timeToRise = fastInterval;
                     }
+                    //Make lava rise
                     setLava(lavaLevel);
                 }
 
@@ -310,11 +299,19 @@ public class GameManager implements Listener {
         return lavaLevel;
     }
 
-    public int getSlowLevel() {
-        return slowLevel;
+    public int getPVPLevel() {
+        return pvpLevel;
     }
 
     public int getTimeLeft() {
         return timeToRise;
+    }
+
+    public Map<String, Integer> getConfigMap() {
+        return configMap;
+    }
+
+    public void setConfigMapOption(String option, int value) {
+        configMap.put(option, value);
     }
 }

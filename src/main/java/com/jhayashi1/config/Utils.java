@@ -15,6 +15,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import com.jhayashi1.Main;
+import com.jhayashi1.framework.GameConfigEnums;
 
 import static java.util.Map.entry;
 
@@ -134,12 +135,20 @@ public class Utils {
         return (int) (Math.random() * -num);
     }
 
-    public static Map<GameConfig, Integer> initGameConfigMap() {
+    public static Map<GameConfigEnums, Integer> initGameConfigMap(Main plugin) {
 
-        Map<GameConfig, Integer> result = new HashMap<GameConfig, Integer>();
+        Map<GameConfigEnums, Integer> result = new HashMap<GameConfigEnums, Integer>();
 
-        for (GameConfig config : GameConfig.values()) {
-            result.put(config, config.getDefaultValue());
+        for (GameConfigEnums config : GameConfigEnums.values()) {
+            int value = plugin.getConfigManager().getGameConfig().getConfigValue(config);
+
+            //If the section is not set, use default value
+            if (value == -1) {
+                Utils.log("Using default value for " + config.name());
+                value = config.getDefaultValue();
+            }
+            
+            result.put(config, value);
         }
 
         return result;

@@ -12,8 +12,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import com.jhayashi1.Main;
-import com.jhayashi1.config.GameConfig;
 import com.jhayashi1.config.Utils;
+import com.jhayashi1.framework.GameConfigEnums;
 import com.jhayashi1.framework.Group;
 import com.jhayashi1.game.GameManager;
 
@@ -59,7 +59,7 @@ public class LavaCommands {
     }
 
     @Subcommand("config")
-    public void setConfigVariable(Player sender, GameConfig configOption, String value) {
+    public void setConfigVariable(Player sender, GameConfigEnums configOption, String value) {
         int integerValue = 0;
 
         //If the input is 'reset' make number default value, otherwise try setting it to an integer value
@@ -85,10 +85,10 @@ public class LavaCommands {
 
     @Subcommand("GameConfig")
     public void getGameConfigVariables(Player sender) {
-        Map<GameConfig, Integer> configMap = plugin.getGameManager().getConfigMap();
+        Map<GameConfigEnums, Integer> configMap = plugin.getGameManager().getConfigMap();
         
-        for (GameConfig key : configMap.keySet()) {
-            sender.sendMessage(key + " = " + configMap.get(key));
+        for (GameConfigEnums key : configMap.keySet()) {
+            sender.sendMessage(key.name() + " = " + configMap.get(key));
         }
     }
 

@@ -9,6 +9,7 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import com.jhayashi1.Main;
+import com.jhayashi1.config.Utils;
 
 public class FireballManager {
     
@@ -23,6 +24,7 @@ public class FireballManager {
 
                 if (randNum < fireballChance) {
                     shootFireballs(gameManager, numFireballs, lavaLevel);
+                    Utils.log("Shooting fireballs");
                 }
             } 
         }, 0, 20L);

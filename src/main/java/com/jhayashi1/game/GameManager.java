@@ -23,15 +23,15 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import com.jhayashi1.Main;
-import com.jhayashi1.config.GameConfig;
 import com.jhayashi1.config.Utils;
+import com.jhayashi1.framework.GameConfigEnums;
 import com.jhayashi1.framework.Group;
 
 public class GameManager {
 
     private Main plugin;
     private Map<UUID, Group> groupMap;
-    private Map<GameConfig, Integer> configMap;
+    private Map<GameConfigEnums, Integer> configMap;
     private List<UUID> blueAlive, redAlive;
     private boolean isStarted, debug, usePlayerPos, fireballsEnabled;
     private BukkitTask gameLoop, fireballLoop;
@@ -48,20 +48,20 @@ public class GameManager {
     public GameManager(Main plugin) {
         this.plugin = plugin;
         isStarted = false;
-        configMap = Utils.initGameConfigMap();
+        configMap = Utils.initGameConfigMap(plugin);
     }
 
     public void initializeGame(Player p) {
         //Game config options
-        debug = (configMap.get(GameConfig.DEBUG) == 1); 
-        usePlayerPos = (configMap.get(GameConfig.HERE) == 1); 
-        worldBorderSize = configMap.get(GameConfig.BORDER);
-        lavaStart = configMap.get(GameConfig.LAVA_START_LEVEL);
-        slowInterval = configMap.get(GameConfig.SLOW_RISE_TIME);
-        fastInterval = configMap.get(GameConfig.FAST_RISE_TIME);
-        numFireballs = configMap.get(GameConfig.FIREBALLS);
-        pvpLevel = configMap.get(GameConfig.PVP_LEVEL);
-        fireballChance = configMap.get(GameConfig.FIREBALL_CHANCE);
+        debug = (configMap.get(GameConfigEnums.DEBUG) == 1); 
+        usePlayerPos = (configMap.get(GameConfigEnums.HERE) == 1); 
+        worldBorderSize = configMap.get(GameConfigEnums.BORDER);
+        lavaStart = configMap.get(GameConfigEnums.LAVA_START_LEVEL);
+        slowInterval = configMap.get(GameConfigEnums.SLOW_RISE_TIME);
+        fastInterval = configMap.get(GameConfigEnums.FAST_RISE_TIME);
+        numFireballs = configMap.get(GameConfigEnums.FIREBALLS);
+        pvpLevel = configMap.get(GameConfigEnums.PVP_LEVEL);
+        fireballChance = configMap.get(GameConfigEnums.FIREBALL_CHANCE);
 
         //Miscellaneous initialization
         isStarted = true;
@@ -255,11 +255,11 @@ public class GameManager {
         return timeToRise;
     }
 
-    public Map<GameConfig, Integer> getConfigMap() {
+    public Map<GameConfigEnums, Integer> getConfigMap() {
         return configMap;
     }
 
-    public void setConfigMapOption(GameConfig option, int value) {
+    public void setConfigMapOption(GameConfigEnums option, int value) {
         configMap.put(option, value);
     }
 

@@ -16,9 +16,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.jhayashi1.commands.LavaCommands;
-import com.jhayashi1.config.GameConfig;
 import com.jhayashi1.config.Utils;
 import com.jhayashi1.framework.CustomRecipes;
+import com.jhayashi1.framework.GameConfigEnums;
 import com.jhayashi1.framework.Group;
 import com.jhayashi1.game.GameListeners;
 import com.jhayashi1.game.GameManager;
@@ -50,13 +50,15 @@ public class Main extends JavaPlugin implements Listener {
 
         logger = getLogger();
 
-        gameManager = new GameManager(this);
         boardManager = new BoardManager(this);
         configManager = new ConfigManager(this);
         profileManager = new ProfileManager(this);
 
         configManager.loadConfigs();
         profileManager.loadProfiles();
+
+        //gameManager requires configs to be loaded first
+        gameManager = new GameManager(this);
 
         groupMap = new HashMap<UUID, Group>();
         new CustomRecipes(this);
@@ -69,8 +71,8 @@ public class Main extends JavaPlugin implements Listener {
 
         // new lavaCmd(this);
         handler = BukkitCommandHandler.create(this);
-        handler.getAutoCompleter().registerParameterSuggestions(GameConfig.class, (args, sender, command) -> 
-            Stream.of(GameConfig.values()).map(GameConfig::name).toList());
+        handler.getAutoCompleter().registerParameterSuggestions(GameConfigEnums.class, (args, sender, command) -> 
+            Stream.of(GameConfigEnums.values()).map(GameConfigEnums::name).toList());
         handler.register(new LavaCommands(this));
 
         this.getServer().getPluginManager().registerEvents(new MiscListener(this), this);
@@ -90,6 +92,7 @@ public class Main extends JavaPlugin implements Listener {
     @Override
     public void onDisable() {
         profileManager.saveProfiles();
+        configManager.getGameConfig().saveGameConfigValues(getGameManager().getConfigMap());
         configManager.saveConfigs();
 
         Utils.log("Plugin fully disabled");

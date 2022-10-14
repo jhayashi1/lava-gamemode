@@ -1,42 +1,30 @@
 package com.jhayashi1.config;
 
-public enum GameConfig {
+import java.util.Map;
 
-    DEBUG(0, 0, 1),
-    HERE(0, 0, 1),
-    BORDER(Utils.DEFAULT_WORLD_BORDER_SIZE, 0, 1000),
-    LAVA_START_LEVEL(Utils.DEFAULT_STARTING_LAVA_LEVEL, -64, 256),
-    PVP_LEVEL(Utils.DEFAULT_PVP_LEVEL, -64, 256),
-    SLOW_RISE_TIME(Utils.DEFAULT_TIME_TO_RISE_SLOW, 1, 1000),
-    FAST_RISE_TIME(Utils.DEFAULT_TIME_TO_RISE_FAST, 1, 1000),
-    FIREBALLS(Utils.DEFAULT_FIREBALLS, 0, 100),
-    FIREBALL_CHANCE(Utils.DEFAULT_FIREBALL_CHANCE, 0, 100);
+import org.bukkit.configuration.ConfigurationSection;
 
-    private int defaultValue, minValue, maxValue;
+import com.jhayashi1.Main;
+import com.jhayashi1.framework.GameConfigEnums;
 
-    GameConfig (int defaultValue, int minValue, int maxValue) {
-        this.defaultValue = defaultValue;
-        this.minValue = minValue;
-        this.maxValue = maxValue;
+public class GameConfig extends Config {
+
+    public GameConfig(Main plugin) {
+        super(plugin, "game-config.yml");
     }
 
-    public int getDefaultValue() {
-        return defaultValue;
+    public int getConfigValue(GameConfigEnums option) {
+        return getInt("options." + option.name(), -1);
     }
 
-    public int getMaxValue() {
-        return maxValue;
+    public void setConfig(GameConfigEnums option, int value) {
+        set("options." + option.name(), value);
     }
     
-    public int getMinValue() {
-        return minValue;
-    }
-
-    public boolean checkNumInValueRange(int num) {
-        if (num >= minValue && num <= maxValue) {
-            return true;
+    public void saveGameConfigValues(Map<GameConfigEnums, Integer> configMap) {
+        for (GameConfigEnums key : configMap.keySet()) {
+            Utils.log("Saving value " + configMap.get(key) + " for key " + key.name());
+            setConfig(key, configMap.get(key));
         }
-
-        return false;
     }
 }

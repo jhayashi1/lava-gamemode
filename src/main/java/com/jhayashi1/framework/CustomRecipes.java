@@ -20,7 +20,7 @@ public class CustomRecipes {
         customArrow();
         customString();
     }
-
+    //TODO: FIX THIS
     private void customArrow() {
         NamespacedKey key = new NamespacedKey(plugin, "arrow");
         ItemStack arrow = new ItemStack(Material.ARROW, 5);

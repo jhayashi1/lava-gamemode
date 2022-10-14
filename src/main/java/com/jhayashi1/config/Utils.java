@@ -134,12 +134,12 @@ public class Utils {
         return (int) (Math.random() * -num);
     }
 
-    public static Map<String, Integer> initGameConfigMap() {
+    public static Map<GameConfig, Integer> initGameConfigMap() {
 
-        Map<String, Integer> result = new HashMap<String, Integer>();
+        Map<GameConfig, Integer> result = new HashMap<GameConfig, Integer>();
 
         for (GameConfig config : GameConfig.values()) {
-            result.put(config.getName(), config.getDefaultValue());
+            result.put(config, config.getDefaultValue());
         }
 
         return result;

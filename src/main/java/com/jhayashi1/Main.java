@@ -1,10 +1,13 @@
 package com.jhayashi1;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -17,6 +20,8 @@ import com.jhayashi1.config.GameConfig;
 import com.jhayashi1.config.Utils;
 import com.jhayashi1.framework.CustomRecipes;
 import com.jhayashi1.framework.Group;
+import com.jhayashi1.game.GameListeners;
+import com.jhayashi1.game.GameManager;
 import com.jhayashi1.listeners.DamageListener;
 import com.jhayashi1.listeners.DeathListener;
 import com.jhayashi1.listeners.InventoryListener;
@@ -24,7 +29,6 @@ import com.jhayashi1.listeners.JoinQuitListener;
 import com.jhayashi1.listeners.MiscListener;
 import com.jhayashi1.manager.BoardManager;
 import com.jhayashi1.manager.ConfigManager;
-import com.jhayashi1.manager.GameManager;
 import com.jhayashi1.manager.ProfileManager;
 
 import revxrsal.commands.bukkit.BukkitCommandHandler;
@@ -65,14 +69,15 @@ public class Main extends JavaPlugin implements Listener {
 
         // new lavaCmd(this);
         handler = BukkitCommandHandler.create(this);
-        handler.getAutoCompleter().registerParameterSuggestions(GameConfig.class, (args, sender, command) -> gameManager.getConfigMap().keySet());
+        handler.getAutoCompleter().registerParameterSuggestions(GameConfig.class, (args, sender, command) -> 
+            Stream.of(GameConfig.values()).map(GameConfig::name).toList());
         handler.register(new LavaCommands(this));
 
         this.getServer().getPluginManager().registerEvents(new MiscListener(this), this);
         this.getServer().getPluginManager().registerEvents(new JoinQuitListener((this)), this);
         this.getServer().getPluginManager().registerEvents(new InventoryListener(this), this);
         this.getServer().getPluginManager().registerEvents(new DeathListener(this), this);
-        this.getServer().getPluginManager().registerEvents(gameManager, this);
+        this.getServer().getPluginManager().registerEvents(new GameListeners(this), this);
         this.getServer().getPluginManager().registerEvents(new DamageListener(this), this);
 
         for (World w : Bukkit.getWorlds()) {

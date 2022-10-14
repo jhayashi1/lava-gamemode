@@ -1,4 +1,4 @@
-package com.jhayashi1.manager;
+package com.jhayashi1.game;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,14 +23,15 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import com.jhayashi1.Main;
+import com.jhayashi1.config.GameConfig;
 import com.jhayashi1.config.Utils;
 import com.jhayashi1.framework.Group;
 
-public class GameManager implements Listener {
+public class GameManager {
 
     private Main plugin;
     private Map<UUID, Group> groupMap;
-    private Map<String, Integer> configMap;
+    private Map<GameConfig, Integer> configMap;
     private List<UUID> blueAlive, redAlive;
     private boolean isStarted, debug, usePlayerPos, fireballsEnabled;
     private BukkitTask gameLoop, fireballLoop;
@@ -52,15 +53,15 @@ public class GameManager implements Listener {
 
     public void initializeGame(Player p) {
         //Game config options
-        debug = (configMap.get("Debug") == 1); 
-        usePlayerPos = (configMap.get("Here") == 1); 
-        worldBorderSize = configMap.get("Border");
-        lavaStart = configMap.get("LavaStartLevel");
-        slowInterval = configMap.get("PVPLevel");
-        fastInterval = configMap.get("SlowRiseTime");
-        numFireballs = configMap.get("FastRiseTime");
-        pvpLevel = configMap.get("Fireballs");
-        fireballChance = configMap.get("FireballChance");
+        debug = (configMap.get(GameConfig.DEBUG) == 1); 
+        usePlayerPos = (configMap.get(GameConfig.HERE) == 1); 
+        worldBorderSize = configMap.get(GameConfig.BORDER);
+        lavaStart = configMap.get(GameConfig.LAVA_START_LEVEL);
+        slowInterval = configMap.get(GameConfig.SLOW_RISE_TIME);
+        fastInterval = configMap.get(GameConfig.FAST_RISE_TIME);
+        numFireballs = configMap.get(GameConfig.FIREBALLS);
+        pvpLevel = configMap.get(GameConfig.PVP_LEVEL);
+        fireballChance = configMap.get(GameConfig.FIREBALL_CHANCE);
 
         //Miscellaneous initialization
         isStarted = true;
@@ -105,24 +106,20 @@ public class GameManager implements Listener {
         //Main game loop that runs every second
         gameLoop = this.plugin.getServer().getScheduler().runTaskTimer((Plugin) plugin, new Runnable() {
             public void run() {
-                //End the game if everybody on a team is dead and it isn't in debug mode
-                if ((blueAlive.isEmpty() || redAlive.isEmpty()) && !debug) {
-                    endGame(redAlive.isEmpty() ? 0 : 1);
-                }
-
-                //Otherwise decrement timeToRise by 1 and make the lava rise if it reaches 0
+                //Decrement timeToRise by 1 and make the lava rise if it reaches 0
                 timeToRise--;
 
                 //If time is 0, make lava level rise
                 if (timeToRise < 0) {
                     lavaLevel++;
+
                     //Slow down time to rise and shoot fireballs when the y level is past a certain point
                     if (lavaLevel > pvpLevel) {
                         timeToRise = slowInterval;
 
                         //If fireballs aren't already enabled, start a new task to spawn them
                         if (!fireballsEnabled) {
-                            fireballLoop = startFireballs();
+                            fireballLoop = FireballManager.startFireballs(GameManager.this, fireballChance, numFireballs, lavaLevel);
                         }
 
                         fireballsEnabled = true;
@@ -131,119 +128,13 @@ public class GameManager implements Listener {
                         timeToRise = fastInterval;
                     }
                     //Make lava rise
-                    setLava(lavaLevel);
+                    LavaManager.setLava(world, lowerX, upperX, lowerZ, upperZ, lavaLevel);
                 }
 
                 //Update scoreboards
                 plugin.getBoardManager().updateBoards();
             }
         }, 20 * 5L, 20 * 1L);
-    }
-
-    public void endGame(int winner) {
-        isStarted = false;
-        stopGameLoop();
-
-        //Message all players the game has ended
-        String announcement = "";
-        if (winner == 0) {
-            announcement = Group.BLUE_TEAM.getName() + ChatColor.GREEN + " has won the round!";
-        } else if (winner == 1) {
-            announcement = Group.RED_TEAM.getName() + ChatColor.GREEN + " has won the round!";
-        } else {
-            announcement = ChatColor.GREEN + "" + ChatColor.BOLD + "Resetting game";
-        }
-
-        Utils.msgAll(announcement);
-
-        //Reset scoreboards
-        plugin.getBoardManager().clearBoard();
-
-        //Reset worldborder and cleanup lava
-        Bukkit.getPlayer(groupMap.entrySet().stream().findAny().get().getKey()).getWorld().getWorldBorder().reset();
-        cleanupLava();
-
-        //Add clock for team selection
-        for (Player online : Bukkit.getOnlinePlayers()) {
-            online.getInventory().addItem(new ItemStack(Material.CLOCK, 1));
-        }
-    }
-
-    @EventHandler
-    public void onDeath(EntityDeathEvent e) {
-        if (e.getEntity() instanceof Player && plugin.getGameManager().isStarted()) {
-            Player p = (Player) e.getEntity();
-            Group group = plugin.getGroupMap().get(p.getUniqueId());
-
-            //Remove them from alive players list
-            if (group == Group.BLUE_TEAM) {
-                blueAlive.remove(p.getUniqueId());
-            } else if (group == Group.RED_TEAM) {
-                redAlive.remove(p.getUniqueId());
-            }
-        }
-    }
-
-    //Go through area in worldborder and add lava at the current y level
-    private void setLava(int level) {
-        for (int i = lowerX; i <= upperX; i++) {
-            for (int j = lowerZ; j <= upperZ; j++) {
-                Location loc = new Location(world, i, level, j);
-                //If the block is air, set it to lava
-                if (loc.getBlock().getType().equals(Material.AIR)) { 
-                    loc.getBlock().setType(Material.LAVA);
-                }
-            }
-        }
-    }
-
-    //Go through area in worldborder and remove lava
-    private void cleanupLava() {
-        for (int i = lowerX; i <= upperX + 1; i++) {
-            for (int j = lavaStart; j <= lavaLevel; j++) {
-                for (int k = lowerZ; k <= upperZ + 1; k++) {
-                    Location loc = new Location(world, i, j, k);
-                    //If the block is lava, set it to air
-                    if (loc.getBlock().getType().equals(Material.LAVA)) { 
-                        loc.getBlock().setType(Material.AIR);
-                    }
-                }
-            }
-        }
-    }
-
-    private BukkitTask startFireballs() {
-        return this.plugin.getServer().getScheduler().runTaskTimer((Plugin) plugin, new Runnable() {
-
-            @Override
-            public void run() {
-                //Random number between 1 and 100
-                int randNum = (int) (Math.random() * 100) + 1;
-
-                if (randNum < fireballChance) {
-                    shootFireballs(numFireballs, lavaLevel);
-                }
-            } 
-        }, 0, 20L);
-    }
-
-    private void shootFireballs(int amount, int level) {
-        int x, z;
-
-        //Get random coordinates to shoot fireballs from
-        for (int i = 0; i < amount; i++) {
-            //Get location
-            x = lowerX + (int) (Math.random() * ((upperX - lowerX) + 1));
-            z = lowerZ + (int) (Math.random() * ((upperZ - lowerZ) + 1));
-            Location loc = new Location(world, x, level, z);
-
-            //Spawn fireball and set velocity
-            Fireball fireball = (Fireball) world.spawnEntity(loc, EntityType.FIREBALL);
-            fireball.setDirection(new Vector(0, 1, 0));
-            fireball.setVelocity(new Vector(0, 1, 0));
-            fireball.setIsIncendiary(true);
-            fireball.setYield(5F);
-        }
     }
 
     private void doPlayerSetup(Player player) {
@@ -269,6 +160,63 @@ public class GameManager implements Listener {
                 player.teleport(player.getWorld().getHighestBlockAt(startX, startZ).getLocation().add(0, 3, 0));
                 break;
         }
+    }
+
+    public void endGame(int winner) {
+        isStarted = false;
+        stopGameLoop();
+
+        //Message all players the game has ended
+        String announcement = "";
+        if (winner == 0) {
+            announcement = Group.BLUE_TEAM.getName() + ChatColor.GREEN + " has won the round!";
+        } else if (winner == 1) {
+            announcement = Group.RED_TEAM.getName() + ChatColor.GREEN + " has won the round!";
+        } else {
+            announcement = ChatColor.GREEN + "" + ChatColor.BOLD + "Resetting game";
+        }
+
+        Utils.msgAll(announcement);
+
+        //Reset scoreboards
+        plugin.getBoardManager().clearBoard();
+
+        //Reset worldborder and cleanup lava
+        Bukkit.getPlayer(groupMap.entrySet().stream().findAny().get().getKey()).getWorld().getWorldBorder().reset();
+        LavaManager.cleanupLava(world, lowerX, upperX, lowerZ, upperZ, lavaStart, lavaLevel);
+
+        //Add clock for team selection
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            online.getInventory().addItem(new ItemStack(Material.CLOCK, 1));
+        }
+    }
+
+    public Main getPlugin() {
+        return plugin;
+    }
+
+    public World getWorld() {
+        return world;
+    }
+    
+    public List<UUID> getBlueAlive() {
+        return new ArrayList<UUID>(blueAlive);
+    }
+
+    public List<UUID> getRedAlive() {
+        return new ArrayList<UUID>(redAlive);
+    }
+
+    public void setBlueAlive(List<UUID> blueAlive) {
+        this.blueAlive = blueAlive;
+    }
+
+    public void setRedAlive(List<UUID> redAlive) {
+        this.redAlive = redAlive;
+    }
+
+    public boolean isDebug() {
+        return debug;
     }
 
     public Group getGroupByPlayer(Player p) {
@@ -307,11 +255,27 @@ public class GameManager implements Listener {
         return timeToRise;
     }
 
-    public Map<String, Integer> getConfigMap() {
+    public Map<GameConfig, Integer> getConfigMap() {
         return configMap;
     }
 
-    public void setConfigMapOption(String option, int value) {
+    public void setConfigMapOption(GameConfig option, int value) {
         configMap.put(option, value);
+    }
+
+    public int getLowerX() {
+        return lowerX;
+    }
+
+    public int getUpperX() {
+        return upperX;
+    }
+
+    public int getLowerZ() {
+        return lowerZ;
+    }
+
+    public int getUpperZ() {
+        return upperZ;
     }
 }

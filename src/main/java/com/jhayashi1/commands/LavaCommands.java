@@ -15,7 +15,7 @@ import com.jhayashi1.Main;
 import com.jhayashi1.config.GameConfig;
 import com.jhayashi1.config.Utils;
 import com.jhayashi1.framework.Group;
-import com.jhayashi1.manager.GameManager;
+import com.jhayashi1.game.GameManager;
 
 import net.md_5.bungee.api.ChatColor;
 import revxrsal.commands.annotation.AutoComplete;
@@ -76,8 +76,8 @@ public class LavaCommands {
 
         //If the integer value is in the acceptable range, set the config option to it
         if (configOption.checkNumInValueRange(integerValue)) {
-            plugin.getGameManager().setConfigMapOption(configOption.getName(), integerValue);
-            sender.sendMessage(ChatColor.GREEN + "Successfully set " + configOption.getName() + "'s value to " + integerValue);
+            plugin.getGameManager().setConfigMapOption(configOption, integerValue);
+            sender.sendMessage(ChatColor.GREEN + "Successfully set " + configOption.name() + "'s value to " + integerValue);
         } else {
             sender.sendMessage(ChatColor.RED + "Value " + integerValue + " not in range " + configOption.getMinValue() + " - " + configOption.getMaxValue());
         }
@@ -85,9 +85,9 @@ public class LavaCommands {
 
     @Subcommand("GameConfig")
     public void getGameConfigVariables(Player sender) {
-        Map<String, Integer> configMap = plugin.getGameManager().getConfigMap();
+        Map<GameConfig, Integer> configMap = plugin.getGameManager().getConfigMap();
         
-        for (String key : configMap.keySet()) {
+        for (GameConfig key : configMap.keySet()) {
             sender.sendMessage(key + " = " + configMap.get(key));
         }
     }

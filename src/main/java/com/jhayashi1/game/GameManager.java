@@ -33,12 +33,13 @@ public class GameManager {
     private Map<UUID, Group> groupMap;
     private Map<GameConfigEnums, Integer> configMap;
     private List<UUID> blueAlive, redAlive;
-    private boolean isStarted, debug, usePlayerPos, fireballsEnabled;
-    private BukkitTask gameLoop, fireballLoop;
+    private boolean isStarted, debug, usePlayerPos, fireballsEnabled, airdropInProgress;
+    private BukkitTask gameLoop, fireballLoop, airdropLoop;
     private World world;
+    private Vector airdropLocation;
 
     private int lavaLevel, lavaStart, timeToRise, numFireballs;
-    private int slowInterval, fastInterval, pvpLevel, fireballChance;
+    private int slowInterval, fastInterval, pvpLevel, fireballChance, airdropTime;
     private int worldBorderSize;
     private int startX, startZ;
     private int blueX, blueZ;
@@ -62,12 +63,14 @@ public class GameManager {
         numFireballs = configMap.get(GameConfigEnums.FIREBALLS);
         pvpLevel = configMap.get(GameConfigEnums.PVP_LEVEL);
         fireballChance = configMap.get(GameConfigEnums.FIREBALL_CHANCE);
+        airdropTime = configMap.get(GameConfigEnums.AIRDROP_TIME);
 
         //Miscellaneous initialization
         isStarted = true;
         timeToRise = fastInterval;
         lavaLevel = lavaStart;
         fireballsEnabled = false;
+        airdropInProgress = false;
         world = p.getWorld();
         groupMap = plugin.getGroupMap();
         blueAlive = new ArrayList<UUID>();
@@ -86,6 +89,9 @@ public class GameManager {
         upperX = (blueX > redX) ? blueX : redX;
         lowerZ = (blueZ < redZ) ? blueZ : redZ;
         upperZ = (blueZ > redZ) ? blueZ : redZ;
+
+        //Airdrop location after knowing where the location is
+        airdropLocation = Utils.getRandomHighestBlock(world, lowerX, upperX, lowerZ, upperZ);
 
         nextGame();
     }
@@ -112,6 +118,13 @@ public class GameManager {
                 //If time is 0, make lava level rise
                 if (timeToRise < 0) {
                     lavaLevel++;
+
+                    //If the airdrop isn't started and the there's less than 15 levels of lava before it reaches the airdrop, start it
+                    if (!airdropInProgress && airdropLocation.getY() + airdropTime < lavaLevel + 50) {
+                        Utils.log("Starting airdrop...");
+                        airdropLoop = AirdropManager.startAirDrop(GameManager.this, airdropLocation);
+                        airdropInProgress = true;
+                    }
 
                     //Slow down time to rise and shoot fireballs when the y level is past a certain point
                     if (lavaLevel > pvpLevel) {
@@ -240,7 +253,22 @@ public class GameManager {
 
     private void stopGameLoop() {
         gameLoop.cancel();
-        fireballLoop.cancel();
+
+        try {
+            fireballLoop.cancel();
+        } catch (Exception e) {
+            Utils.log("Error when cancelling fireball loop");
+        }
+
+        try {
+            cancelAirdropLoop();
+        } catch (Exception e) {
+            Utils.log("Error when cancelling airdrop loop");
+        }
+    }
+
+    public void cancelAirdropLoop() {
+        airdropLoop.cancel();
     }
 
     public int getLavaLevel() {
@@ -277,5 +305,13 @@ public class GameManager {
 
     public int getUpperZ() {
         return upperZ;
+    }
+
+    public int getAirDropTime() {
+        return airdropTime;
+    }
+
+    public Vector getAirdropLocation() {
+        return airdropLocation;
     }
 }

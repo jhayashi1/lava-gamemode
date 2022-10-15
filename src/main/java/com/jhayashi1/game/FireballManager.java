@@ -42,8 +42,9 @@ public class FireballManager {
         //Get random coordinates to shoot fireballs from
         for (int i = 0; i < amount; i++) {
             //Get location
-            x = lowerX + (int) (Math.random() * ((upperX - lowerX) + 1));
-            z = lowerZ + (int) (Math.random() * ((upperZ - lowerZ) + 1));
+            Vector v = Utils.getRandomHighestBlock(world, lowerX, upperX, lowerZ, upperZ);
+            x = v.getBlockX();
+            z = v.getBlockZ();
             Location loc = new Location(world, x, level, z);
 
             //Spawn fireball and set velocity

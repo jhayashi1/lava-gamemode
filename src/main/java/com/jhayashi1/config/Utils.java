@@ -8,11 +8,13 @@ import java.util.logging.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.util.Vector;
 
 import com.jhayashi1.Main;
 import com.jhayashi1.framework.GameConfigEnums;
@@ -27,6 +29,7 @@ public class Utils {
     public static final int DEFAULT_PVP_LEVEL = 75;
     public static final int DEFAULT_FIREBALLS = 20;
     public static final int DEFAULT_FIREBALL_CHANCE = 5;
+    public static final int DEFAULT_AIR_DROP_TIME = 30;
 
     private static Logger logger = Main.getPluginLogger();
 
@@ -152,6 +155,13 @@ public class Utils {
         }
 
         return result;
+    }
+
+    public static Vector getRandomHighestBlock(World world, int lowerX, int upperX, int lowerZ, int upperZ) {
+        int x = lowerX + (int) (Math.random() * ((upperX - lowerX) + 1));
+        int z = lowerZ + (int) (Math.random() * ((upperZ - lowerZ) + 1));
+
+        return new Vector(x, world.getHighestBlockYAt(x, z), z);
     }
 }
 
